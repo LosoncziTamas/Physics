@@ -8,6 +8,9 @@ public class PhysicsEngine : MonoBehaviour
     private Vector3 Velocity { get; [UsedImplicitly] set; }
     
     [SerializeField] private List<Vector3> _forces;
+    [SerializeField] private float _mass;
+
+    private Vector3 _totalForce;
 
     private Vector3 SumForces()
     {
@@ -23,15 +26,22 @@ public class PhysicsEngine : MonoBehaviour
         return sum;
     }
 
+    private void UpdateTotalForce()
+    {
+        _totalForce = SumForces();
+    }
+
+    private void UpdateVelocity()
+    {
+        var acceleration = _totalForce / _mass;
+        Velocity += acceleration * Time.fixedDeltaTime;
+    }
+    
     private void FixedUpdate()
     {
-        var totalForce = SumForces();
-        if (totalForce != Vector3.zero)
-        {
-            Debug.LogError("Unbalanced force");
-            return;
-        }
+        UpdateTotalForce();
+        UpdateVelocity();
         var deltaS = Velocity * Time.fixedDeltaTime;
-        transform.position += deltaS + totalForce;
+        transform.position += deltaS + _totalForce;
     }
 }
