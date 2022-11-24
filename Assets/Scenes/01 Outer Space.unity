@@ -136,6 +136,7 @@ GameObject:
   - component: {fileID: 333018988}
   - component: {fileID: 333018987}
   - component: {fileID: 333018991}
+  - component: {fileID: 333018992}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -234,10 +235,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <Velocity>k__BackingField: {x: 0, y: 0, z: 0}
-  _forces:
-  - {x: 1, y: 0, z: 0}
-  - {x: -1, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
+  _mass: 100000
+  _showTrails: 1
+--- !u!114 &333018992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 333018986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5591d93dff4a483b946fcbae5553211, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _force: {x: 1, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
