@@ -43,6 +43,7 @@ public class PhysicsEngine : MonoBehaviour
     private void UpdateTotalForce()
     {
         _totalForce = SumForces();
+        Forces.Clear();
     }
 
     private void UpdateVelocity()

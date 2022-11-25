@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(PhysicsEngine))]
@@ -10,6 +11,10 @@ public class ApplyForce : MonoBehaviour
     private void Start()
     {
         _physicsEngine = GetComponent<PhysicsEngine>();
+    }
+
+    private void FixedUpdate()
+    {
         _physicsEngine.Forces.Add(_force);
     }
 }
