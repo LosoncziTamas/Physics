@@ -8,10 +8,10 @@ public class PhysicsEngine : MonoBehaviour
     [field:SerializeField]
     private Vector3 Velocity { get; [UsedImplicitly] set; }
 
-    public List<Vector3> Forces { get; } = new();
+    public List<Vector3> ForcesInNewton { get; } = new();
     
-    [SerializeField] private float _mass;
-    [SerializeField] public bool _showTrails = true;
+    [SerializeField] private float _massInKilogram;
+    [SerializeField] public bool _showTrails = true; 
     
     private Vector3 _totalForce;
     private LineRenderer _lineRenderer;
@@ -28,12 +28,12 @@ public class PhysicsEngine : MonoBehaviour
 
     private Vector3 SumForces()
     {
-        if (Forces == null)
+        if (ForcesInNewton == null)
         {
             return Vector3.zero;
         }
         var sum = Vector3.zero;
-        foreach (var force in Forces)
+        foreach (var force in ForcesInNewton)
         {
             sum += force;
         }
@@ -43,12 +43,12 @@ public class PhysicsEngine : MonoBehaviour
     private void UpdateTotalForce()
     {
         _totalForce = SumForces();
-        Forces.Clear();
+        ForcesInNewton.Clear();
     }
 
     private void UpdateVelocity()
     {
-        var acceleration = _totalForce / _mass;
+        var acceleration = _totalForce / _massInKilogram;
         Velocity += acceleration * Time.fixedDeltaTime;
     }
     
@@ -64,7 +64,7 @@ public class PhysicsEngine : MonoBehaviour
     {
         Handles.color = Color.red;
         var from = transform.position;
-        foreach (var force in Forces)
+        foreach (var force in ForcesInNewton)
         {
             Handles.DrawLine(from, from + force, 10);
         }
@@ -75,10 +75,10 @@ public class PhysicsEngine : MonoBehaviour
         if (_showTrails)
         {
             _lineRenderer.enabled = true;
-            _numberOfForces = Forces.Count;
+            _numberOfForces = ForcesInNewton.Count;
             _lineRenderer.positionCount = _numberOfForces * 2;
             var i = 0;
-            foreach (var forceVector in Forces)
+            foreach (var forceVector in ForcesInNewton)
             {
                 _lineRenderer.SetPosition(i, Vector3.zero);
                 _lineRenderer.SetPosition(i + 1, -forceVector);
