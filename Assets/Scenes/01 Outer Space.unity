@@ -235,7 +235,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <Velocity>k__BackingField: {x: 0, y: 0, z: 0}
-  _mass: 100000
+  <MassInKilogram>k__BackingField: 2000000
   _showTrails: 1
 --- !u!114 &333018992
 MonoBehaviour:
@@ -249,7 +249,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5591d93dff4a483b946fcbae5553211, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _force: {x: 1, y: 0, z: 0}
+  _thrustUnitVector: {x: 0, y: 1, z: 0}
+  _fuelMassInKilogram: 1000
+  _thrustPercent: 0
+  _maxThrustInKiloNewton: 2278
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

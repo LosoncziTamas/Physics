@@ -10,7 +10,8 @@ public class PhysicsEngine : MonoBehaviour
 
     public List<Vector3> ForcesInNewton { get; } = new();
     
-    [SerializeField] private float _massInKilogram;
+    [field:SerializeField] 
+    public float MassInKilogram { get; [UsedImplicitly] set; }
     [SerializeField] public bool _showTrails = true; 
     
     private Vector3 _totalForce;
@@ -48,7 +49,7 @@ public class PhysicsEngine : MonoBehaviour
 
     private void UpdateVelocity()
     {
-        var acceleration = _totalForce / _massInKilogram;
+        var acceleration = _totalForce / MassInKilogram;
         Velocity += acceleration * Time.fixedDeltaTime;
     }
     
