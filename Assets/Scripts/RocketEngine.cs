@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(PhysicsEngine))]
 public class RocketEngine : MonoBehaviour
 {
+    private const float KiloNewtonToNewton = 1000;
+    
     [SerializeField] private Vector3 _thrustUnitVector;
     [SerializeField] private float _fuelMassInKilogram;
     [Range(0, 1)]
@@ -18,8 +20,28 @@ public class RocketEngine : MonoBehaviour
         _physicsEngine.MassInKilogram += _fuelMassInKilogram;
     }
 
+    private float CalculateFuel()
+    {
+        return 0f;
+    }
+    
     private void FixedUpdate()
     {
+        var fuelForUpdate = CalculateFuel();
+        if (_fuelMassInKilogram > fuelForUpdate)
+        {
+            _fuelMassInKilogram -= fuelForUpdate;
+            _physicsEngine.MassInKilogram -= fuelForUpdate;
+            ExertForce();
+        }
         _physicsEngine.ForcesInNewton.Add(_thrustUnitVector);
+    }
+
+    private void ExertForce()
+    {
+        var thrust = _maxThrustInKiloNewton * _thrustPercent * KiloNewtonToNewton;
+        _currentThrustInNewton = thrust;
+        var thrustVectorInNewton = _thrustUnitVector.normalized * thrust;
+        _physicsEngine.ForcesInNewton.Add(thrustVectorInNewton);
     }
 }
