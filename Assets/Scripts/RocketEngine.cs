@@ -22,7 +22,9 @@ public class RocketEngine : MonoBehaviour
 
     private float CalculateFuel()
     {
-        return 0f;
+        var effectiveExhaustVelocityInMetersPerSecond = 4462f;
+        var exhaustMassFlow = _currentThrustInNewton / effectiveExhaustVelocityInMetersPerSecond;
+        return exhaustMassFlow * Time.fixedDeltaTime;
     }
     
     private void FixedUpdate()
@@ -34,7 +36,6 @@ public class RocketEngine : MonoBehaviour
             _physicsEngine.MassInKilogram -= fuelForUpdate;
             ExertForce();
         }
-        _physicsEngine.ForcesInNewton.Add(_thrustUnitVector);
     }
 
     private void ExertForce()
