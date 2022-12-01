@@ -8,15 +8,11 @@ public class PhysicsEngine : MonoBehaviour
     [field:SerializeField]
     private Vector3 Velocity { get; [UsedImplicitly] set; }
 
-    public List<Vector3> ForcesInNewton { get; } = new();
-    
-    [field:SerializeField] 
-    public float MassInKilogram { get; [UsedImplicitly] set; }
+    [field:SerializeField] public List<Vector3> ForcesInNewton { get; [UsedImplicitly] set; } = new();
+    [field:SerializeField] public float MassInKilogram { get; [UsedImplicitly] set; }
     [SerializeField] public bool _showTrails = true; 
     
-    private Vector3 _totalForce;
     private LineRenderer _lineRenderer;
-    private int _numberOfForces;
 
     private void Start()
     {
@@ -41,24 +37,25 @@ public class PhysicsEngine : MonoBehaviour
         return sum;
     }
 
-    private void UpdateTotalForce()
+    private Vector3 CalculateForceForFrame()
     {
-        _totalForce = SumForces();
+        var result = SumForces();
         ForcesInNewton.Clear();
+        return result;
     }
 
-    private void UpdateVelocity()
+    private Vector3 CalculateAccelerationForFrame(Vector3 totalForce)
     {
-        var acceleration = _totalForce / MassInKilogram;
-        Velocity += acceleration * Time.fixedDeltaTime;
+        var acceleration = totalForce / MassInKilogram;
+        return acceleration * Time.fixedDeltaTime;
     }
     
     private void FixedUpdate()
     {
-        UpdateTotalForce();
-        UpdateVelocity();
-        var deltaS = Velocity * Time.fixedDeltaTime;
-        transform.position += deltaS + _totalForce;
+        var force = CalculateForceForFrame();
+        Velocity += CalculateAccelerationForFrame(force);
+        var delta = Velocity * Time.fixedDeltaTime;
+        transform.position += delta;
     }
 
     private void OnDrawGizmos()
@@ -76,8 +73,8 @@ public class PhysicsEngine : MonoBehaviour
         if (_showTrails)
         {
             _lineRenderer.enabled = true;
-            _numberOfForces = ForcesInNewton.Count;
-            _lineRenderer.positionCount = _numberOfForces * 2;
+            var numberOfForces = ForcesInNewton.Count;
+            _lineRenderer.positionCount = numberOfForces * 2;
             var i = 0;
             foreach (var forceVector in ForcesInNewton)
             {

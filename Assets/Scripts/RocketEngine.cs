@@ -20,7 +20,7 @@ public class RocketEngine : MonoBehaviour
         _physicsEngine.MassInKilogram += _fuelMassInKilogram;
     }
 
-    private float CalculateFuel()
+    private float CalculateFuelForFrame()
     {
         var effectiveExhaustVelocityInMetersPerSecond = 4462f;
         var exhaustMassFlow = _currentThrustInNewton / effectiveExhaustVelocityInMetersPerSecond;
@@ -29,11 +29,11 @@ public class RocketEngine : MonoBehaviour
     
     private void FixedUpdate()
     {
-        var fuelForUpdate = CalculateFuel();
-        if (_fuelMassInKilogram > fuelForUpdate)
+        var fuelForFrame = CalculateFuelForFrame();
+        if (_fuelMassInKilogram > fuelForFrame)
         {
-            _fuelMassInKilogram -= fuelForUpdate;
-            _physicsEngine.MassInKilogram -= fuelForUpdate;
+            _fuelMassInKilogram -= fuelForFrame;
+            _physicsEngine.MassInKilogram -= fuelForFrame;
             ExertForce();
         }
     }
