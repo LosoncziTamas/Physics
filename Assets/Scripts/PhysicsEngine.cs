@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PhysicsEngine : MonoBehaviour
 {
-    private const float G = 6.674e-11f;  // 6.674×10−11 m3⋅kg−1⋅s−2
+    private const float G = 6.674e-11f;
     
     [field:SerializeField] private Vector3 Velocity { get; [UsedImplicitly] set; }
     [field:SerializeField] public List<Vector3> ForcesInNewton { get; [UsedImplicitly] set; } = new();
@@ -53,7 +53,12 @@ public class PhysicsEngine : MonoBehaviour
         return acceleration * Time.fixedDeltaTime;
     }
 
-    private Vector3 CalculateGravityForFrame()
+    private void AddForce(Vector3 force)
+    {
+        ForcesInNewton.Add(force);
+    }
+
+    private void CalculateAndUpdateGravityForFrame()
     {
         foreach (var engineA in _physicsEngines)
         {
@@ -64,20 +69,20 @@ public class PhysicsEngine : MonoBehaviour
                     continue;
                 }
                 var massProduct = engineA.MassInKilogram * engineB.MassInKilogram;
-                var distance = Vector3.Distance(engineA.transform.position, engineB.transform.position);
-                var distanceSquare = distance * distance;
-                var gravity = G * massProduct / distanceSquare;
-                Debug.Log($"[Force on: {engineA.name} due to gravity of {engineB.name}]");
+                var offset = engineA.transform.position - engineB.transform.position;
+                var distanceSquare = offset.magnitude * offset.magnitude;
+                var gravityMagnitude = G * massProduct / distanceSquare;
+                var gravityVector = gravityMagnitude * offset.normalized;
+                engineA.AddForce(-gravityVector);
             }
         }
-        return Vector3.zero;
     }
     
     private void FixedUpdate()
     {
         var force = CalculateForceForFrame();
         Velocity += CalculateAccelerationForFrame(force);
-        CalculateGravityForFrame();
+        CalculateAndUpdateGravityForFrame();
         var delta = Velocity * Time.fixedDeltaTime;
         transform.position += delta;
     }
