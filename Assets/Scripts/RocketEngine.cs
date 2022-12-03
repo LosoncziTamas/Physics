@@ -22,7 +22,7 @@ public class RocketEngine : MonoBehaviour
 
     private float CalculateFuelForFrame()
     {
-        var effectiveExhaustVelocityInMetersPerSecond = 4462f;
+        const float effectiveExhaustVelocityInMetersPerSecond = 4462f;
         var exhaustMassFlow = _currentThrustInNewton / effectiveExhaustVelocityInMetersPerSecond;
         return exhaustMassFlow * Time.fixedDeltaTime;
     }
