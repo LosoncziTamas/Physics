@@ -185,6 +185,7 @@ GameObject:
   - component: {fileID: 333018987}
   - component: {fileID: 333018991}
   - component: {fileID: 333018992}
+  - component: {fileID: 333018993}
   m_Layer: 0
   m_Name: Ball 1
   m_TagString: Untagged
@@ -302,6 +303,20 @@ MonoBehaviour:
   _fuelMassInKilogram: 0.071717
   _thrustPercent: 1
   _maxThrustInKiloNewton: 1
+--- !u!114 &333018993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 333018986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cae2b3058fb4930a4bb2e2b91f07c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _velocityExponent: 1.778
+  _dragConstant: 1
 --- !u!1001 &892178089
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -7,7 +7,7 @@ public class PhysicsEngine : MonoBehaviour
 {
     private const float G = 6.674e-11f;
     
-    [field:SerializeField] private Vector3 Velocity { get; [UsedImplicitly] set; }
+    [field:SerializeField] public Vector3 Velocity { get; [UsedImplicitly] set; }
     [field:SerializeField] public List<Vector3> ForcesInNewton { get; [UsedImplicitly] set; } = new();
     [field:SerializeField] public float MassInKilogram { get; [UsedImplicitly] set; }
     
@@ -53,7 +53,7 @@ public class PhysicsEngine : MonoBehaviour
         return acceleration * Time.fixedDeltaTime;
     }
 
-    private void AddForce(Vector3 force)
+    public void AddForce(Vector3 force)
     {
         ForcesInNewton.Add(force);
     }
