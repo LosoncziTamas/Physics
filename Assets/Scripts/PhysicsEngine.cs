@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class PhysicsEngine : MonoBehaviour
 {
-    private const float G = 6.674e-11f;
-    
     [field:SerializeField] public Vector3 Velocity { get; [UsedImplicitly] set; }
     [field:SerializeField] public List<Vector3> ForcesInNewton { get; [UsedImplicitly] set; } = new();
     [field:SerializeField] public float MassInKilogram { get; [UsedImplicitly] set; }
@@ -14,11 +12,9 @@ public class PhysicsEngine : MonoBehaviour
     [SerializeField] public bool _showTrails = true; 
     
     private LineRenderer _lineRenderer;
-    private List<PhysicsEngine> _physicsEngines;
 
     private void Start()
     {
-        _physicsEngines = new List<PhysicsEngine>(FindObjectsOfType<PhysicsEngine>());
         _lineRenderer = gameObject.AddComponent<LineRenderer>();
         _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         _lineRenderer.startColor = _lineRenderer.endColor = Color.yellow;
@@ -57,32 +53,12 @@ public class PhysicsEngine : MonoBehaviour
     {
         ForcesInNewton.Add(force);
     }
-
-    private void CalculateAndUpdateGravityForFrame()
-    {
-        foreach (var engineA in _physicsEngines)
-        {
-            foreach (var engineB in _physicsEngines)
-            {
-                if (engineA == engineB)
-                {
-                    continue;
-                }
-                var massProduct = engineA.MassInKilogram * engineB.MassInKilogram;
-                var offset = engineA.transform.position - engineB.transform.position;
-                var distanceSquare = offset.magnitude * offset.magnitude;
-                var gravityMagnitude = G * massProduct / distanceSquare;
-                var gravityVector = gravityMagnitude * offset.normalized;
-                engineA.AddForce(-gravityVector);
-            }
-        }
-    }
     
     private void FixedUpdate()
     {
+        DrawTrails();
         var force = CalculateForceForFrame();
         Velocity += CalculateAccelerationForFrame(force);
-        CalculateAndUpdateGravityForFrame();
         var delta = Velocity * Time.fixedDeltaTime;
         transform.position += delta;
     }
@@ -96,8 +72,8 @@ public class PhysicsEngine : MonoBehaviour
             Handles.DrawLine(from, from + force, 10);
         }
     }
-    
-    private void Update()
+
+    private void DrawTrails()
     {
         if (_showTrails)
         {
