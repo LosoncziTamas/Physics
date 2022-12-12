@@ -4,13 +4,21 @@ using UnityEngine;
 
 public class Launcher : MonoBehaviour
 {
+    private static readonly Vector3 LaunchDirection = new Vector3(-1, 1, 0);
+    
     [SerializeField] private PhysicsEngine _ballPrefab;
     [SerializeField] private float _maxLaunchSpeed;
-    [SerializeField] private float _speedOfIncrease;
     [SerializeField] private AudioSource _windUp;
     [SerializeField] private AudioSource _launch;
 
     private bool _beingPushed;
+    private float _extraSpeedPerFrame;
+    private readonly YieldInstruction _waitForPhysicsUpdate = new WaitForFixedUpdate();
+
+    private void Awake()
+    {
+        _extraSpeedPerFrame = _maxLaunchSpeed * Time.fixedDeltaTime / _windUp.clip.length;
+    }
 
     private IEnumerator OnMouseDown()
     {
@@ -19,9 +27,13 @@ public class Launcher : MonoBehaviour
         _windUp.Play();
         while (_beingPushed)
         {
-            yield return null;
-            var newSpeed = launchSpeed + Time.deltaTime * _speedOfIncrease;
+            var newSpeed = launchSpeed + _extraSpeedPerFrame;
             launchSpeed = Math.Min(newSpeed, _maxLaunchSpeed);
+            if (launchSpeed >= _maxLaunchSpeed)
+            {
+                _beingPushed = false;
+            }
+            yield return _waitForPhysicsUpdate;
         }
         _windUp.Stop();
         Launch(launchSpeed);
@@ -36,6 +48,6 @@ public class Launcher : MonoBehaviour
     {
         _launch.Play();
         var ball = Instantiate(_ballPrefab);
-        ball.Velocity = new Vector3(-1, 1, 0).normalized * launchSpeed;
+        ball.Velocity = LaunchDirection.normalized * launchSpeed;
     }
 }
