@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 7339315601255554847}
   - component: {fileID: 7339315601255554843}
   - component: {fileID: 7339315601255554821}
+  - component: {fileID: 6029172332452389150}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -113,7 +114,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <Velocity>k__BackingField: {x: 0, y: 0, z: 0}
   <ForcesInNewton>k__BackingField: []
-  <MassInKilogram>k__BackingField: 10.00078
+  <MassInKilogram>k__BackingField: 100
   _showTrails: 1
 --- !u!114 &7339315601255554821
 MonoBehaviour:
@@ -127,5 +128,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53cae2b3058fb4930a4bb2e2b91f07c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _velocityExponent: 1.778
-  _dragConstant: 1
+  _velocityExponent: 1.8
+  _dragConstant: 2
+--- !u!114 &6029172332452389150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7339315601255554846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9193ff4b947c34ffbad990950f36890d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

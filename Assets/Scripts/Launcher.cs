@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Launcher : MonoBehaviour
 {
-    private static readonly Vector3 LaunchDirection = new Vector3(-1, 1, 0);
+    private static readonly Vector3 LaunchDirection = new(-1, 1, 0);
     
     [SerializeField] private PhysicsEngine _ballPrefab;
     [SerializeField] private float _maxLaunchSpeed;
