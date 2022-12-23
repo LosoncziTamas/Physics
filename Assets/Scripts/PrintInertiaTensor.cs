@@ -16,6 +16,6 @@ public class PrintInertiaTensor : MonoBehaviour
     {
         var inertiaTensor = _rigidbody.inertiaTensor;
         var centerOfMass = _rigidbody.centerOfMass;
-        Debug.Log($"inertia {inertiaTensor} center of mass {centerOfMass}");
+        Debug.Log($"{name} inertia {inertiaTensor} center of mass {centerOfMass}");
     }
 }
