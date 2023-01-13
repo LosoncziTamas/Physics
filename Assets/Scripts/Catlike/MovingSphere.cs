@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Catlike
 {
-    [RequireComponent(typeof(TrailRenderer))]
     public class MovingSphere : MonoBehaviour
     {
         public enum MovementType
