@@ -5,9 +5,9 @@ namespace Catlike
     [RequireComponent(typeof(Rigidbody))]
     public class MovingSphereRigidbody : MonoBehaviour
     {
-
         [SerializeField, Range(0f, 100f)] private float _maxSpeed = 10f;
         [SerializeField, Range(0f, 100f)] private float _maxAcceleration = 10f;
+        [SerializeField, Range(0f, 100f)] float _maxAirAcceleration = 1f;
         [SerializeField, Range(0f, 10f)] private float _jumpHeight = 2f;
         [SerializeField, Range(0, 5)] private int _maxAirJumpCount = 0;
         
@@ -50,7 +50,8 @@ namespace Catlike
 
         private void FixedUpdate()
         {
-            var maxSpeedChange = _maxAcceleration * Time.deltaTime;
+            var acceleration = _onGround ? _maxAcceleration : _maxAirAcceleration;
+            var maxSpeedChange = acceleration * Time.deltaTime;
             _velocity = _rigidbody.velocity;
             if (_onGround)
             {
@@ -73,7 +74,12 @@ namespace Catlike
             if (canJump)
             {
                 _activeJumpCount++;
-                _velocity.y += CalculateGravitationalEscapeVelocity(_jumpHeight);
+                var jumpVelocity = CalculateGravitationalEscapeVelocity(_jumpHeight);
+                if (_velocity.y > 0.0f)
+                {
+                    jumpVelocity = Mathf.Max(jumpVelocity - _velocity.y, 0.0f);
+                }
+                _velocity.y += jumpVelocity;
             }
         }
 
