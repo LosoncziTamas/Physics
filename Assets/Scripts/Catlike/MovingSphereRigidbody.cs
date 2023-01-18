@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Catlike
@@ -10,6 +11,7 @@ namespace Catlike
         [SerializeField, Range(0f, 100f)] float _maxAirAcceleration = 1f;
         [SerializeField, Range(0f, 10f)] private float _jumpHeight = 2f;
         [SerializeField, Range(0, 5)] private int _maxAirJumpCount = 0;
+        [SerializeField, Range(0f, 90f)] float _maxGroundAngle = 25f;
         
         private Vector3 _velocity;
         private Vector3 _startPosition;
@@ -18,11 +20,22 @@ namespace Catlike
         private bool _desiredJump;
         private bool _onGround;
         private int _activeJumpCount;
+        private float _minGroundDotProduct;
+
+        private void Awake()
+        {
+            OnValidate();
+        }
 
         private void Start()
         {
             _startPosition = transform.position;
             _rigidbody = GetComponent<Rigidbody>();
+        }
+
+        private void OnValidate()
+        {
+            _minGroundDotProduct = Mathf.Cos(_maxGroundAngle * Mathf.Deg2Rad);
         }
 
         private void ResetToDefault()
@@ -103,7 +116,7 @@ namespace Catlike
             for (var i = 0; i < collision.contactCount; i++) 
             {
                 var normal = collision.GetContact(i).normal;
-                _onGround |= normal.y > 0.9f;
+                _onGround |= normal.y > _minGroundDotProduct;
             }
         }
     }
