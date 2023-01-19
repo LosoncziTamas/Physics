@@ -17,6 +17,7 @@ namespace Catlike
         private Vector3 _startPosition;
         private Vector3 _desiredVelocity;
         private Rigidbody _rigidbody;
+        private Vector3 _contactNormal;
         private bool _desiredJump;
         private bool _onGround;
         private int _activeJumpCount;
@@ -70,6 +71,10 @@ namespace Catlike
             {
                 _activeJumpCount = 0;
             }
+            else
+            {
+                _contactNormal = Vector3.up;
+            }
             _velocity.x = Mathf.MoveTowards(_velocity.x, _desiredVelocity.x, maxSpeedChange);
             _velocity.z = Mathf.MoveTowards(_velocity.z, _desiredVelocity.z, maxSpeedChange);
             if (_desiredJump)
@@ -88,11 +93,12 @@ namespace Catlike
             {
                 _activeJumpCount++;
                 var jumpVelocity = CalculateGravitationalEscapeVelocity(_jumpHeight);
-                if (_velocity.y > 0.0f)
+                var alignedSpeed = Vector3.Dot(_velocity, _contactNormal);
+                if (alignedSpeed > 0.0f)
                 {
-                    jumpVelocity = Mathf.Max(jumpVelocity - _velocity.y, 0.0f);
+                    jumpVelocity = Mathf.Max(jumpVelocity - alignedSpeed, 0.0f);
                 }
-                _velocity.y += jumpVelocity;
+                _velocity += _contactNormal * jumpVelocity;
             }
         }
 
@@ -116,7 +122,11 @@ namespace Catlike
             for (var i = 0; i < collision.contactCount; i++) 
             {
                 var normal = collision.GetContact(i).normal;
-                _onGround |= normal.y > _minGroundDotProduct;
+                if (normal.y > _minGroundDotProduct)
+                {
+                    _onGround = true;
+                    _contactNormal = normal;
+                }
             }
         }
     }
