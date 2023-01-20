@@ -92,17 +92,17 @@ namespace Catlike
             if (canJump)
             {
                 _activeJumpCount++;
-                var jumpVelocity = CalculateGravitationalEscapeVelocity(_jumpHeight);
+                var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight);
                 var alignedSpeed = Vector3.Dot(_velocity, _contactNormal);
                 if (alignedSpeed > 0.0f)
                 {
-                    jumpVelocity = Mathf.Max(jumpVelocity - alignedSpeed, 0.0f);
+                    jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0.0f);
                 }
-                _velocity += _contactNormal * jumpVelocity;
+                _velocity += _contactNormal * jumpSpeed;
             }
         }
 
-        private static float CalculateGravitationalEscapeVelocity(float height)
+        private static float CalculateGravitationalEscapeSpeed(float height)
         {
             return Mathf.Sqrt(-2f * Physics.gravity.y * height);
         }
@@ -128,6 +128,11 @@ namespace Catlike
                     _contactNormal = normal;
                 }
             }
+        }
+
+        private Vector3 ProjectOnContactPlane(Vector3 vector)
+        {
+            return vector - _contactNormal * Vector3.Dot(vector, _contactNormal);
         }
     }
 }
