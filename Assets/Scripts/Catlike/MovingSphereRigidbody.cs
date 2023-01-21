@@ -64,8 +64,19 @@ namespace Catlike
 
         private void FixedUpdate()
         {
-            var acceleration = _onGround ? _maxAcceleration : _maxAirAcceleration;
-            var maxSpeedChange = acceleration * Time.deltaTime;
+            UpdateState();
+            AdjustVelocity();
+            if (_desiredJump)
+            {
+                _desiredJump = false;
+                Jump();
+            }
+            _rigidbody.velocity = _velocity;
+            _onGround = false;
+        }
+
+        private void UpdateState()
+        {
             _velocity = _rigidbody.velocity;
             if (_onGround)
             {
@@ -75,15 +86,6 @@ namespace Catlike
             {
                 _contactNormal = Vector3.up;
             }
-            _velocity.x = Mathf.MoveTowards(_velocity.x, _desiredVelocity.x, maxSpeedChange);
-            _velocity.z = Mathf.MoveTowards(_velocity.z, _desiredVelocity.z, maxSpeedChange);
-            if (_desiredJump)
-            {
-                _desiredJump = false;
-                Jump();
-            }
-            _rigidbody.velocity = _velocity;
-            _onGround = false;
         }
 
         private void Jump()
@@ -128,6 +130,19 @@ namespace Catlike
                     _contactNormal = normal;
                 }
             }
+        }
+
+        private void AdjustVelocity()
+        {
+            var xAxis = ProjectOnContactPlane(Vector3.right).normalized;
+            var zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+            var currentX = Vector3.Dot(_velocity, xAxis);
+            var currentZ = Vector3.Dot(_velocity, zAxis);
+            var acceleration = _onGround ? _maxAcceleration : _maxAirAcceleration;
+            var maxSpeedChange = acceleration * Time.deltaTime;
+            var newX = Mathf.MoveTowards(currentX, _desiredVelocity.x, maxSpeedChange);
+            var newZ = Mathf.MoveTowards(currentZ, _desiredVelocity.z, maxSpeedChange);
+            _velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
         }
 
         private Vector3 ProjectOnContactPlane(Vector3 vector)

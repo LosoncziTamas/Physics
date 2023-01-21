@@ -228,7 +228,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxSpeed: 10
-  _maxAcceleration: 10
+  _maxAcceleration: 33.5
   _maxAirAcceleration: 0
   _jumpHeight: 2
   _maxAirJumpCount: 0
