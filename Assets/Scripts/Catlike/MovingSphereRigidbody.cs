@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Catlike
@@ -6,6 +5,8 @@ namespace Catlike
     [RequireComponent(typeof(Rigidbody))]
     public class MovingSphereRigidbody : MonoBehaviour
     {
+        private static readonly int ColorProperty = Shader.PropertyToID("_Color");
+        
         [SerializeField, Range(0f, 100f)] private float _maxSpeed = 10f;
         [SerializeField, Range(0f, 100f)] private float _maxAcceleration = 10f;
         [SerializeField, Range(0f, 100f)] float _maxAirAcceleration = 1f;
@@ -18,10 +19,13 @@ namespace Catlike
         private Vector3 _desiredVelocity;
         private Rigidbody _rigidbody;
         private Vector3 _contactNormal;
+        private int _groundContactCount;
         private bool _desiredJump;
-        private bool _onGround;
         private int _activeJumpCount;
         private float _minGroundDotProduct;
+        private Renderer _renderer;
+
+        private bool OnGround => _groundContactCount > 0;
 
         private void Awake()
         {
@@ -32,6 +36,7 @@ namespace Catlike
         {
             _startPosition = transform.position;
             _rigidbody = GetComponent<Rigidbody>();
+            _renderer = GetComponent<Renderer>();
         }
 
         private void OnValidate()
@@ -60,6 +65,12 @@ namespace Catlike
             playerInput.y = Input.GetAxis("Vertical");
             _desiredJump |= Input.GetButtonDown("Jump");
             _desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * _maxSpeed;
+            UpdateColor();
+        }
+
+        private void UpdateColor()
+        {
+            _renderer.material.SetColor(ColorProperty, Color.white * (_groundContactCount * 0.25f));
         }
 
         private void FixedUpdate()
@@ -72,15 +83,19 @@ namespace Catlike
                 Jump();
             }
             _rigidbody.velocity = _velocity;
-            _onGround = false;
+            ResetState();
         }
 
         private void UpdateState()
         {
             _velocity = _rigidbody.velocity;
-            if (_onGround)
+            if (OnGround)
             {
                 _activeJumpCount = 0;
+                if (_groundContactCount > 1)
+                {
+                    _contactNormal.Normalize();
+                }
             }
             else
             {
@@ -88,9 +103,15 @@ namespace Catlike
             }
         }
 
+        private void ResetState()
+        {
+            _groundContactCount = 0;
+            _contactNormal = Vector3.zero;
+        }
+
         private void Jump()
         {
-            var canJump = _onGround || _activeJumpCount < _maxAirJumpCount;
+            var canJump = OnGround || _activeJumpCount < _maxAirJumpCount;
             if (canJump)
             {
                 _activeJumpCount++;
@@ -126,8 +147,8 @@ namespace Catlike
                 var normal = collision.GetContact(i).normal;
                 if (normal.y > _minGroundDotProduct)
                 {
-                    _onGround = true;
-                    _contactNormal = normal;
+                    _groundContactCount++;
+                    _contactNormal += normal;
                 }
             }
         }
@@ -138,7 +159,7 @@ namespace Catlike
             var zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
             var currentX = Vector3.Dot(_velocity, xAxis);
             var currentZ = Vector3.Dot(_velocity, zAxis);
-            var acceleration = _onGround ? _maxAcceleration : _maxAirAcceleration;
+            var acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
             var maxSpeedChange = acceleration * Time.deltaTime;
             var newX = Mathf.MoveTowards(currentX, _desiredVelocity.x, maxSpeedChange);
             var newZ = Mathf.MoveTowards(currentZ, _desiredVelocity.z, maxSpeedChange);

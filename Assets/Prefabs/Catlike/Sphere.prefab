@@ -232,4 +232,4 @@ MonoBehaviour:
   _maxAirAcceleration: 0
   _jumpHeight: 2
   _maxAirJumpCount: 0
-  _maxGroundAngle: 20
+  _maxGroundAngle: 90
