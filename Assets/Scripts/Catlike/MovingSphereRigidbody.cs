@@ -23,6 +23,7 @@ namespace Catlike
         private bool _desiredJump;
         private int _activeJumpCount;
         private float _minGroundDotProduct;
+        private int _stepsSinceLastGrounded;
         private Renderer _renderer;
 
         private bool OnGround => _groundContactCount > 0;
@@ -70,7 +71,7 @@ namespace Catlike
 
         private void UpdateColor()
         {
-            _renderer.material.SetColor(ColorProperty, Color.white * (_groundContactCount * 0.25f));
+            _renderer.material.SetColor(ColorProperty, OnGround ? Color.black : Color.white);
         }
 
         private void FixedUpdate()
@@ -88,9 +89,11 @@ namespace Catlike
 
         private void UpdateState()
         {
+            _stepsSinceLastGrounded++;
             _velocity = _rigidbody.velocity;
-            if (OnGround)
+            if (OnGround || SnapToGround())
             {
+                _stepsSinceLastGrounded = 0;
                 _activeJumpCount = 0;
                 if (_groundContactCount > 1)
                 {
@@ -101,6 +104,31 @@ namespace Catlike
             {
                 _contactNormal = Vector3.up;
             }
+        }
+
+        private bool SnapToGround()
+        {
+            if (_stepsSinceLastGrounded > 1)
+            {
+                return false;
+            }
+            if (!Physics.Raycast(_rigidbody.position, Vector3.down, out var hit))
+            {
+                return false;
+            }
+            if (hit.normal.y < _minGroundDotProduct)
+            {
+                return false;
+            }
+            _groundContactCount = 1;
+            _contactNormal = hit.normal;
+            var speed = _velocity.magnitude;
+            var dot = Vector3.Dot(_velocity, hit.normal);
+            if (dot > 0)
+            {
+                _velocity = (_velocity - hit.normal * dot).normalized * speed;
+            }
+            return true;
         }
 
         private void ResetState()
