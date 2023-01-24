@@ -12,7 +12,8 @@ namespace Catlike
         [SerializeField, Range(0f, 100f)] float _maxAirAcceleration = 1f;
         [SerializeField, Range(0f, 10f)] private float _jumpHeight = 2f;
         [SerializeField, Range(0, 5)] private int _maxAirJumpCount = 0;
-        [SerializeField, Range(0f, 90f)] float _maxGroundAngle = 25f;
+        [SerializeField, Range(0f, 90f)] private float _maxGroundAngle = 25f;
+        [SerializeField, Range(0f, 100f)] private float _maxSnapSpeed = 100f;
         
         private Vector3 _velocity;
         private Vector3 _startPosition;
@@ -108,7 +109,12 @@ namespace Catlike
 
         private bool SnapToGround()
         {
+            var speed = _velocity.magnitude;
             if (_stepsSinceLastGrounded > 1)
+            {
+                return false;
+            }
+            if (speed > _maxSnapSpeed) 
             {
                 return false;
             }
@@ -122,7 +128,6 @@ namespace Catlike
             }
             _groundContactCount = 1;
             _contactNormal = hit.normal;
-            var speed = _velocity.magnitude;
             var dot = Vector3.Dot(_velocity, hit.normal);
             if (dot > 0)
             {
