@@ -188,17 +188,26 @@ namespace Catlike
 
         private void AdjustVelocity()
         {
+            // Get z and x axis in terms of the plane coordinates.
             var xAxis = ProjectOnContactPlane(Vector3.right).normalized;
             var zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+            // Determine the current velocity in these dimensions.
             var currentX = Vector3.Dot(_velocity, xAxis);
             var currentZ = Vector3.Dot(_velocity, zAxis);
             var acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
             var maxSpeedChange = acceleration * Time.deltaTime;
+            // Determine new velocity.
+            // TODO: check what if _desiredVelocity is also projected.
             var newX = Mathf.MoveTowards(currentX, _desiredVelocity.x, maxSpeedChange);
             var newZ = Mathf.MoveTowards(currentZ, _desiredVelocity.z, maxSpeedChange);
-            _velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
+            // Calculate the difference.
+            var deltaX = newX - currentX;
+            var deltaZ = newZ - currentZ;
+            // Add to current velocity in the appropriate dimensions.
+            _velocity += xAxis * deltaX + zAxis * deltaZ;
         }
 
+        
         private Vector3 ProjectOnContactPlane(Vector3 vector)
         {
             return vector - _contactNormal * Vector3.Dot(vector, _contactNormal);
