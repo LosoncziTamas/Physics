@@ -242,7 +242,7 @@ MonoBehaviour:
     m_Bits: 179
   _stairsMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 128
 --- !u!114 &5360205307190857649
 MonoBehaviour:
   m_ObjectHideFlags: 0

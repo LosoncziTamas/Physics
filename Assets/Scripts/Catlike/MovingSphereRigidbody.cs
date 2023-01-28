@@ -143,30 +143,38 @@ namespace Catlike
             _contactNormal = _steepNormal = Vector3.zero;
         }
 
-        private Vector3 GetJumpDirection()
+        private bool TryGetJumpDirection(out Vector3 jumpDirection)
         {
             if (OnGround)
             {
-                return _contactNormal;
+                jumpDirection = _contactNormal;
+                return true;
             }
             if (OnSteep)
             {
                 _activeJumpCount = 0;
-                return _steepNormal;
+                jumpDirection = _steepNormal;
+                return true;
             }
             var airJumpIsPossible = _maxAirJumpCount > 0 && _activeJumpCount <= _maxAirJumpCount;
             if (airJumpIsPossible)
             {
                 _activeJumpCount = _activeJumpCount == 0 ? 1 : _activeJumpCount;
                 // This should be set to Vector3.up in this case.
-                return _contactNormal;
+                jumpDirection = _contactNormal;
+                return true;
             }
-            return Vector3.zero;
+            jumpDirection = Vector3.zero;
+            return false;
         }
 
         private void Jump()
         {
-            var jumpDirection = (GetJumpDirection() + Vector3.up).normalized;
+            if (!TryGetJumpDirection(out var jumpDirection))
+            {
+                return;
+            }
+            jumpDirection = (jumpDirection + Vector3.up).normalized;
             _stepsSinceLastJump = 0;
             _activeJumpCount++;
             var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight);
