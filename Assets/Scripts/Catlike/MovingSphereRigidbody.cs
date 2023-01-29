@@ -177,6 +177,7 @@ namespace Catlike
             jumpDirection = (jumpDirection + Vector3.up).normalized;
             _stepsSinceLastJump = 0;
             _activeJumpCount++;
+            Debug.Log("ActiveJumpCount " + _activeJumpCount);
             var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight);
             var alignedSpeed = Vector3.Dot(_velocity, jumpDirection);
             if (alignedSpeed > 0.0f)
