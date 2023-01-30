@@ -87,13 +87,13 @@ namespace Catlike
             _stepsSinceLastGrounded++;
             _stepsSinceLastJump++;
             _velocity = _rigidbody.velocity;
-            if (OnGround || SnapToGround() || CheckSteepContacts())
+            if (OnGround || SnapToGround()) // CheckSteepContacts
             {
                 _stepsSinceLastGrounded = 0;
                 // Checking false landing.
+                _activeJumpCount = 0;
                 if (_stepsSinceLastJump > 1)
                 {
-                    _activeJumpCount = 0;
                 }
                 if (_groundContactCount > 1)
                 {
@@ -150,16 +150,16 @@ namespace Catlike
                 jumpDirection = _contactNormal;
                 return true;
             }
-            if (OnSteep)
+            /*if (OnSteep)
             {
-                _activeJumpCount = 0;
+                // _activeJumpCount = 0;
                 jumpDirection = _steepNormal;
                 return true;
-            }
-            var airJumpIsPossible = _maxAirJumpCount > 0 && _activeJumpCount <= _maxAirJumpCount;
+            }*/
+            var airJumpIsPossible =_activeJumpCount < _maxAirJumpCount; //  _maxAirJumpCount > 0 &&  <=
             if (airJumpIsPossible)
             {
-                _activeJumpCount = _activeJumpCount == 0 ? 1 : _activeJumpCount;
+                //_activeJumpCount = _activeJumpCount == 0 ? 1 : _activeJumpCount;
                 // This should be set to Vector3.up in this case.
                 jumpDirection = _contactNormal;
                 return true;
