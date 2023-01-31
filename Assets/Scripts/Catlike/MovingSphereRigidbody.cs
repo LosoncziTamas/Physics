@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Catlike
@@ -87,13 +88,13 @@ namespace Catlike
             _stepsSinceLastGrounded++;
             _stepsSinceLastJump++;
             _velocity = _rigidbody.velocity;
-            if (OnGround || SnapToGround()) // CheckSteepContacts
+            if (OnGround || SnapToGround() || CheckSteepContacts())
             {
                 _stepsSinceLastGrounded = 0;
                 // Checking false landing.
-                _activeJumpCount = 0;
                 if (_stepsSinceLastJump > 1)
                 {
+                    _activeJumpCount = 0;
                 }
                 if (_groundContactCount > 1)
                 {
@@ -150,16 +151,19 @@ namespace Catlike
                 jumpDirection = _contactNormal;
                 return true;
             }
-            /*if (OnSteep)
+            if (OnSteep)
             {
-                // _activeJumpCount = 0;
+                _activeJumpCount = 0;
                 jumpDirection = _steepNormal;
                 return true;
-            }*/
-            var airJumpIsPossible =_activeJumpCount < _maxAirJumpCount; //  _maxAirJumpCount > 0 &&  <=
+            }
+            var airJumpIsPossible = _maxAirJumpCount > 0 && _activeJumpCount <= _maxAirJumpCount;
             if (airJumpIsPossible)
             {
-                //_activeJumpCount = _activeJumpCount == 0 ? 1 : _activeJumpCount;
+                if (_activeJumpCount == 0)
+                {
+                    _activeJumpCount = 1;
+                }
                 // This should be set to Vector3.up in this case.
                 jumpDirection = _contactNormal;
                 return true;
@@ -177,7 +181,6 @@ namespace Catlike
             jumpDirection = (jumpDirection + Vector3.up).normalized;
             _stepsSinceLastJump = 0;
             _activeJumpCount++;
-            Debug.Log("ActiveJumpCount " + _activeJumpCount);
             var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight);
             var alignedSpeed = Vector3.Dot(_velocity, jumpDirection);
             if (alignedSpeed > 0.0f)
@@ -222,6 +225,13 @@ namespace Catlike
                     _steepNormal += normal;
                 }
             }
+        }
+
+        private void OnGUI()
+        {
+            GUILayout.Label("Steep contact count " + _steepContactCount);
+            GUILayout.Label("Ground contact count " + _groundContactCount);
+            GUILayout.Label("Active jump count " + _activeJumpCount);
         }
 
         private bool CheckSteepContacts()
