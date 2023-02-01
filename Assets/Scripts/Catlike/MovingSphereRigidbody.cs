@@ -160,7 +160,8 @@ namespace Catlike
             var airJumpIsPossible = _maxAirJumpCount > 0 && _activeJumpCount <= _maxAirJumpCount;
             if (airJumpIsPossible)
             {
-                if (_activeJumpCount == 0)
+                var falling = _activeJumpCount == 0;
+                if (falling)
                 {
                     _activeJumpCount = 1;
                 }

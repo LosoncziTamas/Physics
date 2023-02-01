@@ -1666,6 +1666,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 197969860796230198, guid: 0379d4707a828415494f18f6eb7a15be, type: 3}
+      propertyPath: _maxAirJumpCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 197969860796230198, guid: 0379d4707a828415494f18f6eb7a15be, type: 3}
       propertyPath: _stairsMask.m_Bits
       value: 128
       objectReference: {fileID: 0}
