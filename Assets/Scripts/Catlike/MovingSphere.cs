@@ -34,6 +34,7 @@ namespace Catlike
 
         private void OnGUI()
         {
+            return;
             GUILayout.Label($"Current movement type: {_movementType}");
             foreach (MovementType movementType in Enum.GetValues(typeof(MovementType)))
             {

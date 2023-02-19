@@ -230,6 +230,7 @@ namespace Catlike
 
         private void OnGUI()
         {
+            return;
             GUILayout.Label("Steep contact count " + _steepContactCount);
             GUILayout.Label("Ground contact count " + _groundContactCount);
             GUILayout.Label("Active jump count " + _activeJumpCount);
