@@ -13,9 +13,11 @@ namespace Catlike
         [SerializeField, Range(1f, 360f)] private float _rotationSpeedInDegreesPerSecond = 90f;
         [SerializeField, Range(-89f, 89f)] private float _minVerticalAngle = -30f;
         [SerializeField, Range(-89f, 89f)] private float _maxVerticalAngle = 60f;
+        [SerializeField, Min(0f)] private float _alignDelay = 5f;
 
         private Vector3 _focusPoint;
         private Transform _cachedTransform;
+        private float _lastManualRotationTime;
         private Vector2 _orbitAngles = new(45f, 0f);
 
         private void OnValidate()
@@ -57,7 +59,7 @@ namespace Catlike
         {
             UpdateFocusPoint();
             Quaternion lookRotation;
-            if (ManualRotation())
+            if (ManualRotation() || AutomaticRotation())
             {
                 ConstrainAngles();
                 lookRotation = Quaternion.Euler(_orbitAngles);
@@ -81,10 +83,20 @@ namespace Catlike
             var inputExceedsSensitivity = input.x is < -e or > e || input.y is < -e or > e;
             if (inputExceedsSensitivity) {
                 _orbitAngles += _rotationSpeedInDegreesPerSecond * Time.unscaledDeltaTime * input;
+                _lastManualRotationTime = Time.unscaledTime;
                 return true;
             }
 
             return false;
+        }
+        
+        private bool AutomaticRotation () 
+        {
+            if (Time.unscaledTime - _lastManualRotationTime < _alignDelay) 
+            {
+                return false;
+            }
+            return true;
         }
 
         private void UpdateFocusPoint()
