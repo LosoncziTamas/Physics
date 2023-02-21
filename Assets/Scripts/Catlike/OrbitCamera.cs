@@ -90,7 +90,7 @@ namespace Catlike
             return false;
         }
         
-        private bool AutomaticRotation () 
+        private bool AutomaticRotation() 
         {
             if (Time.unscaledTime - _lastManualRotationTime < _alignDelay) 
             {
