@@ -16,6 +16,7 @@ namespace Catlike
         [SerializeField, Min(0f)] private float _alignDelay = 5f;
 
         private Vector3 _focusPoint;
+        private Vector3 _previousFocusPoint;
         private Transform _cachedTransform;
         private float _lastManualRotationTime;
         private Vector2 _orbitAngles = new(45f, 0f);
@@ -96,11 +97,20 @@ namespace Catlike
             {
                 return false;
             }
+            var movement = new Vector2(_focusPoint.x - _previousFocusPoint.x, _focusPoint.z - _previousFocusPoint.z);
+            var movementDeltaSqr = movement.sqrMagnitude;
+            if (movementDeltaSqr < 0.0001f)
+            {
+                return false;
+            }
+            var headingAngle = GetAngle(movement / Mathf.Sqrt(movementDeltaSqr));
+            _orbitAngles.y = headingAngle;
             return true;
         }
 
         private void UpdateFocusPoint()
         {
+            _previousFocusPoint = _focusPoint;
             var targetPoint = _focus.position;
             // Relaxed focus enabled
             if (_focusRadius > 0)
@@ -127,6 +137,12 @@ namespace Catlike
             {
                 _focusPoint = targetPoint;
             }
+        }
+
+        private static float GetAngle(Vector2 direction)
+        {
+            var angle = Mathf.Acos(direction.y) * Mathf.Rad2Deg;
+            return direction.x < 0f ? 360f - angle : angle;;
         }
     }
 }

@@ -378,6 +378,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _focus: {fileID: 6315726875175274677}
   _distance: 5
+  _focusCentering: 0.5
+  _focusRadius: 1
+  _rotationSpeedInDegreesPerSecond: 90
+  _minVerticalAngle: -30
+  _maxVerticalAngle: 60
+  _alignDelay: 1
 --- !u!43 &1092841985
 Mesh:
   m_ObjectHideFlags: 0
