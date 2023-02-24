@@ -87,10 +87,16 @@ namespace Catlike
                 _lastManualRotationTime = Time.unscaledTime;
                 return true;
             }
-
             return false;
         }
+
+        private Vector2 _direction;
         
+        private void OnDrawGizmos()
+        {
+            Gizmos.DrawLine(transform.position, transform.position + new Vector3(_direction.x, 0f, _direction.y) * 2.0f);
+        }
+
         private bool AutomaticRotation() 
         {
             if (Time.unscaledTime - _lastManualRotationTime < _alignDelay) 
@@ -103,9 +109,18 @@ namespace Catlike
             {
                 return false;
             }
-            var headingAngle = GetAngle(movement / Mathf.Sqrt(movementDeltaSqr));
-            _orbitAngles.y = headingAngle;
+            _direction = movement / Mathf.Sqrt(movementDeltaSqr);
+            var headingAngle = GetAngle(_direction);
+            var rotationChange = _rotationSpeedInDegreesPerSecond * Time.unscaledDeltaTime;
+            _orbitAngles.y = Mathf.MoveTowardsAngle(_orbitAngles.y, headingAngle, rotationChange);
             return true;
+        }
+        
+        private static float GetAngle(Vector2 direction)
+        {
+            // y means here movement toward z
+            var angle = Mathf.Acos(direction.y) * Mathf.Rad2Deg;
+            return direction.x < 0f ? 360f - angle : angle;
         }
 
         private void UpdateFocusPoint()
@@ -137,12 +152,6 @@ namespace Catlike
             {
                 _focusPoint = targetPoint;
             }
-        }
-
-        private static float GetAngle(Vector2 direction)
-        {
-            var angle = Mathf.Acos(direction.y) * Mathf.Rad2Deg;
-            return direction.x < 0f ? 360f - angle : angle;;
         }
     }
 }
