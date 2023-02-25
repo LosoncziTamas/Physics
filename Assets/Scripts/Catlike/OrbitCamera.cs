@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace Catlike
@@ -14,6 +15,7 @@ namespace Catlike
         [SerializeField, Range(-89f, 89f)] private float _minVerticalAngle = -30f;
         [SerializeField, Range(-89f, 89f)] private float _maxVerticalAngle = 60f;
         [SerializeField, Min(0f)] private float _alignDelay = 5f;
+        [SerializeField, Range(0f, 90f)] private float _alignSmoothRange = 45f;
 
         private Vector3 _focusPoint;
         private Vector3 _previousFocusPoint;
@@ -91,10 +93,12 @@ namespace Catlike
         }
 
         private Vector2 _direction;
+        private float _deltaAbs;
         
         private void OnDrawGizmos()
         {
             Gizmos.DrawLine(transform.position, transform.position + new Vector3(_direction.x, 0f, _direction.y) * 2.0f);
+            Handles.Label(_focus.position, "Delta abs" + _deltaAbs);
         }
 
         private bool AutomaticRotation() 
@@ -111,7 +115,17 @@ namespace Catlike
             }
             _direction = movement / Mathf.Sqrt(movementDeltaSqr);
             var headingAngle = GetAngle(_direction);
-            var rotationChange = _rotationSpeedInDegreesPerSecond * Time.unscaledDeltaTime;
+            var deltaAbs = Mathf.Abs(Mathf.DeltaAngle(_orbitAngles.y, headingAngle));
+            _deltaAbs = deltaAbs;
+            var rotationChange = _rotationSpeedInDegreesPerSecond * Mathf.Min(Time.unscaledDeltaTime, movementDeltaSqr);
+            if (deltaAbs < _alignSmoothRange)
+            {
+                rotationChange *= deltaAbs / _alignSmoothRange;
+            } 
+            else if (180.0f - deltaAbs < _alignSmoothRange)
+            {
+                rotationChange *= (180.0f - deltaAbs) / _alignSmoothRange;
+            }
             _orbitAngles.y = Mathf.MoveTowardsAngle(_orbitAngles.y, headingAngle, rotationChange);
             return true;
         }
