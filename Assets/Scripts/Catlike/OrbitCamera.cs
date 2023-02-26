@@ -15,6 +15,7 @@ namespace Catlike
         [SerializeField, Min(0f)] private float _alignDelay = 5f;
         [SerializeField, Range(0f, 90f)] private float _alignSmoothRange = 45f;
         [SerializeField] private Camera _regularCamera;
+        [SerializeField] private LayerMask _obstructionMask = -1;
         
         private Vector3 _focusPoint;
         private Vector3 _previousFocusPoint;
@@ -78,10 +79,19 @@ namespace Catlike
             var lookDirection = lookRotation * Vector3.forward;
             var lookPosition = _focusPoint - lookDirection * _distance;
 
+            // Determine actual focus position to cast from 
+            var rectOffset = lookDirection * _regularCamera.nearClipPlane;
+            var rectPosition = lookPosition + rectOffset;
+            var castFrom = _focus.position;
+            var castLine = rectPosition - castFrom;
+            var castDistance = castLine.magnitude;
+            var castDirection = castLine / castDistance;
+            
             // Pulling camera closer if something blocks the view
-            if (Physics.BoxCast(_focusPoint, CameraHalfExtends, -lookDirection, out var hit, lookRotation, _distance - _regularCamera.nearClipPlane))
+            if (Physics.BoxCast(castFrom, CameraHalfExtends, castDirection, out var hit, lookRotation, castDistance, _obstructionMask))
             {
-                lookPosition = _focusPoint - lookDirection * (hit.distance + _regularCamera.nearClipPlane);
+                rectPosition = castFrom + castDirection * hit.distance;
+                lookPosition = rectPosition - rectOffset;
             }
             
             // Align to look at focus point from given distance
@@ -131,7 +141,7 @@ namespace Catlike
             _orbitAngles.y = Mathf.MoveTowardsAngle(_orbitAngles.y, headingAngle, rotationChange);
             return true;
         }
-        
+
         private static float GetAngle(Vector2 direction)
         {
             // y means here movement toward z

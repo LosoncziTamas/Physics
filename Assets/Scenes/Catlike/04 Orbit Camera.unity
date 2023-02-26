@@ -8697,6 +8697,9 @@ MonoBehaviour:
   _alignDelay: 1
   _alignSmoothRange: 45
   _regularCamera: {fileID: 963194227}
+  _obstructionMask:
+    serializedVersion: 2
+    m_Bits: 247
 --- !u!43 &1003703935
 Mesh:
   m_ObjectHideFlags: 0
