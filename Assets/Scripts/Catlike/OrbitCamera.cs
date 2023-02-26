@@ -1,5 +1,3 @@
-using System;
-using UnityEditor;
 using UnityEngine;
 
 namespace Catlike
@@ -16,12 +14,25 @@ namespace Catlike
         [SerializeField, Range(-89f, 89f)] private float _maxVerticalAngle = 60f;
         [SerializeField, Min(0f)] private float _alignDelay = 5f;
         [SerializeField, Range(0f, 90f)] private float _alignSmoothRange = 45f;
-
+        [SerializeField] private Camera _regularCamera;
+        
         private Vector3 _focusPoint;
         private Vector3 _previousFocusPoint;
         private Transform _cachedTransform;
         private float _lastManualRotationTime;
         private Vector2 _orbitAngles = new(45f, 0f);
+
+        private Vector3 CameraHalfExtends
+        {
+            get
+            {
+                var y = _regularCamera.nearClipPlane * Mathf.Tan(0.5f * Mathf.Deg2Rad * _regularCamera.fieldOfView);
+                var x = y * _regularCamera.aspect;
+                var z = 0f;
+                var halfExtends = new Vector3(x, y, z);
+                return halfExtends;
+            }
+        }
 
         private void OnValidate()
         {
@@ -30,14 +41,7 @@ namespace Catlike
                 _maxVerticalAngle = _minVerticalAngle;
             }
         }
-
-        private void OnGUI()
-        {
-            GUILayout.Label("_orbitAngles " + _orbitAngles);
-            GUILayout.Label("_maxVerticalAngle " + _maxVerticalAngle);
-            GUILayout.Label("_minVerticalAngle " + _minVerticalAngle);
-        }
-
+        
         private void ConstrainAngles() 
         {
             _orbitAngles.x = Mathf.Clamp(_orbitAngles.x, _minVerticalAngle, _maxVerticalAngle);
@@ -73,6 +77,13 @@ namespace Catlike
             }
             var lookDirection = lookRotation * Vector3.forward;
             var lookPosition = _focusPoint - lookDirection * _distance;
+
+            // Pulling camera closer if something blocks the view
+            if (Physics.BoxCast(_focusPoint, CameraHalfExtends, -lookDirection, out var hit, lookRotation, _distance - _regularCamera.nearClipPlane))
+            {
+                lookPosition = _focusPoint - lookDirection * (hit.distance + _regularCamera.nearClipPlane);
+            }
+            
             // Align to look at focus point from given distance
             _cachedTransform.SetPositionAndRotation(lookPosition, lookRotation);
         }
@@ -92,15 +103,6 @@ namespace Catlike
             return false;
         }
 
-        private Vector2 _direction;
-        private float _deltaAbs;
-        
-        private void OnDrawGizmos()
-        {
-            Gizmos.DrawLine(transform.position, transform.position + new Vector3(_direction.x, 0f, _direction.y) * 2.0f);
-            Handles.Label(_focus.position, "Delta abs" + _deltaAbs);
-        }
-
         private bool AutomaticRotation() 
         {
             if (Time.unscaledTime - _lastManualRotationTime < _alignDelay) 
@@ -113,15 +115,15 @@ namespace Catlike
             {
                 return false;
             }
-            _direction = movement / Mathf.Sqrt(movementDeltaSqr);
-            var headingAngle = GetAngle(_direction);
+            var direction = movement / Mathf.Sqrt(movementDeltaSqr);
+            var headingAngle = GetAngle(direction);
             var deltaAbs = Mathf.Abs(Mathf.DeltaAngle(_orbitAngles.y, headingAngle));
-            _deltaAbs = deltaAbs;
             var rotationChange = _rotationSpeedInDegreesPerSecond * Mathf.Min(Time.unscaledDeltaTime, movementDeltaSqr);
             if (deltaAbs < _alignSmoothRange)
             {
                 rotationChange *= deltaAbs / _alignSmoothRange;
             } 
+            // preventing the camera from rotating away at full speed.
             else if (180.0f - deltaAbs < _alignSmoothRange)
             {
                 rotationChange *= (180.0f - deltaAbs) / _alignSmoothRange;

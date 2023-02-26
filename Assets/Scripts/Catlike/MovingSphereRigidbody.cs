@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Catlike
@@ -19,7 +18,8 @@ namespace Catlike
         [SerializeField, Min(0f)] private float _probeDistance = 1f;
         [SerializeField] private LayerMask _probeMask = -1;
         [SerializeField] private LayerMask _stairsMask = -1;
-        
+        [SerializeField] private Transform _playerInputSpace = default;
+
         private Vector3 _velocity;
         private Vector3 _desiredVelocity;
         private Rigidbody _rigidbody;
@@ -61,7 +61,20 @@ namespace Catlike
             playerInput.x = Input.GetAxis("Horizontal");
             playerInput.y = Input.GetAxis("Vertical");
             _desiredJump |= Input.GetButtonDown("Jump");
-            _desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * _maxSpeed;
+            if (_playerInputSpace)
+            {
+                var forward = _playerInputSpace.forward;
+                forward.y = 0;
+                forward.Normalize();
+                var right = _playerInputSpace.right;
+                right.y = 0;
+                right.Normalize();
+                _desiredVelocity = (forward * playerInput.y + right * playerInput.x) * _maxSpeed;
+            }
+            else
+            {
+                _desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * _maxSpeed;
+            }
             UpdateColor();
         }
 
@@ -230,10 +243,7 @@ namespace Catlike
 
         private void OnGUI()
         {
-            return;
-            GUILayout.Label("Steep contact count " + _steepContactCount);
-            GUILayout.Label("Ground contact count " + _groundContactCount);
-            GUILayout.Label("Active jump count " + _activeJumpCount);
+            GUILayout.Label("_desiredVelocity magnitude " + _desiredVelocity.magnitude);
         }
 
         private bool CheckSteepContacts()
