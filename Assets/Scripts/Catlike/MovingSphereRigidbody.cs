@@ -19,7 +19,8 @@ namespace Catlike
         [SerializeField] private LayerMask _probeMask = -1;
         [SerializeField] private LayerMask _stairsMask = -1;
         [SerializeField] private Transform _playerInputSpace = default;
-
+        
+        private Vector3 _upAxis = default;
         private Vector3 _velocity;
         private Vector3 _desiredVelocity;
         private Rigidbody _rigidbody;
@@ -85,6 +86,7 @@ namespace Catlike
 
         private void FixedUpdate()
         {
+            _upAxis = -Physics.gravity.normalized;
             UpdateState();
             AdjustVelocity();
             if (_desiredJump)
@@ -116,7 +118,7 @@ namespace Catlike
             }
             else
             {
-                _contactNormal = Vector3.up;
+                _contactNormal = _upAxis;
             }
         }
 
@@ -131,11 +133,12 @@ namespace Catlike
             {
                 return false;
             }
-            if (!Physics.Raycast(_rigidbody.position, Vector3.down, out var hit, _probeDistance, _probeMask))
+            if (!Physics.Raycast(_rigidbody.position, -_upAxis, out var hit, _probeDistance, _probeMask))
             {
                 return false;
             }
-            if (hit.normal.y < GetMinDot(hit.collider.gameObject.layer))
+            var upDot = Vector3.Dot(_upAxis, hit.normal);
+            if (upDot < GetMinDot(hit.collider.gameObject.layer))
             {
                 return false;
             }
@@ -192,7 +195,7 @@ namespace Catlike
             {
                 return;
             }
-            jumpDirection = (jumpDirection + Vector3.up).normalized;
+            jumpDirection = (jumpDirection + _upAxis).normalized;
             _stepsSinceLastJump = 0;
             _activeJumpCount++;
             var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight);
@@ -206,7 +209,7 @@ namespace Catlike
 
         private static float CalculateGravitationalEscapeSpeed(float height)
         {
-            return Mathf.Sqrt(-2f * Physics.gravity.y * height);
+            return Mathf.Sqrt(2f * Physics.gravity.magnitude * height);
         }
 
         private void OnCollisionStay(Collision collision)
@@ -225,7 +228,8 @@ namespace Catlike
             for (var i = 0; i < collision.contactCount; i++) 
             {
                 var normal = collision.GetContact(i).normal;
-                var isGround = normal.y > minDot;
+                var upDot = Vector3.Dot(_upAxis, normal);
+                var isGround = upDot > minDot;
                 if (isGround)
                 {
                     _groundContactCount++;
@@ -253,7 +257,8 @@ namespace Catlike
                 return false;
             }
             _steepNormal.Normalize();
-            if (_steepNormal.y >= _minGroundDotProduct)
+            var upDot = Vector3.Dot(_upAxis, _steepNormal);
+            if (upDot >= _minGroundDotProduct)
             {
                 _groundContactCount++;
                 _contactNormal = _steepNormal;
