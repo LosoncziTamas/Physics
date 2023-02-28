@@ -17,6 +17,7 @@ namespace Catlike
         [SerializeField] private Camera _regularCamera;
         [SerializeField] private LayerMask _obstructionMask = -1;
         
+        private Quaternion _gravityAlignment = Quaternion.identity;
         private Vector3 _focusPoint;
         private Vector3 _previousFocusPoint;
         private Transform _cachedTransform;
@@ -65,6 +66,8 @@ namespace Catlike
 
         private void LateUpdate()
         {
+            // create alignment from the last aligned up direction to the current up direction
+            _gravityAlignment = Quaternion.FromToRotation(_gravityAlignment * Vector3.up, -Physics.gravity.normalized) * _gravityAlignment;
             UpdateFocusPoint();
             Quaternion lookRotation;
             if (ManualRotation() || AutomaticRotation())
