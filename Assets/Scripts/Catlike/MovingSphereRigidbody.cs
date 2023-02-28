@@ -20,7 +20,9 @@ namespace Catlike
         [SerializeField] private LayerMask _stairsMask = -1;
         [SerializeField] private Transform _playerInputSpace = default;
         
-        private Vector3 _upAxis = default;
+        private Vector3 _upAxis;
+        private Vector3 _rightAxis;
+        private Vector3 _forwardAxis;
         private Vector3 _velocity;
         private Vector3 _desiredVelocity;
         private Rigidbody _rigidbody;
@@ -64,6 +66,8 @@ namespace Catlike
             _desiredJump |= Input.GetButtonDown("Jump");
             if (_playerInputSpace)
             {
+                _rightAxis = ProjectDirectionOnPlane(_playerInputSpace.right, _upAxis);
+                _forwardAxis = ProjectDirectionOnPlane(_playerInputSpace.forward, _upAxis);
                 var forward = _playerInputSpace.forward;
                 forward.y = 0;
                 forward.Normalize();
@@ -74,6 +78,8 @@ namespace Catlike
             }
             else
             {
+                _rightAxis = ProjectDirectionOnPlane(Vector3.right, _upAxis);
+                _forwardAxis = ProjectDirectionOnPlane(Vector3.forward, _upAxis);
                 _desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * _maxSpeed;
             }
             UpdateColor();
@@ -270,8 +276,8 @@ namespace Catlike
         private void AdjustVelocity()
         {
             // Get z and x axis in terms of the plane coordinates.
-            var xAxis = ProjectOnContactPlane(Vector3.right).normalized;
-            var zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+            var xAxis = ProjectDirectionOnPlane(_rightAxis, _contactNormal);
+            var zAxis = ProjectDirectionOnPlane(_forwardAxis, _contactNormal);
             // Determine the current velocity in these dimensions.
             var currentX = Vector3.Dot(_velocity, xAxis);
             var currentZ = Vector3.Dot(_velocity, zAxis);
@@ -288,10 +294,9 @@ namespace Catlike
             _velocity += xAxis * deltaX + zAxis * deltaZ;
         }
 
-        
-        private Vector3 ProjectOnContactPlane(Vector3 vector)
+        private static Vector3 ProjectDirectionOnPlane(Vector3 direction, Vector3 normal)
         {
-            return vector - _contactNormal * Vector3.Dot(vector, _contactNormal);
+            return (direction - normal * Vector3.Dot(direction, normal)).normalized;
         }
 
         private float GetMinDot(int layerIndex)
