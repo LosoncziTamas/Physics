@@ -20,7 +20,7 @@ namespace Catlike
         [SerializeField] private LayerMask _probeMask = -1;
         [SerializeField] private LayerMask _stairsMask = -1;
         [SerializeField] private Transform _playerInputSpace = default;
-        [SerializeField] private bool _drawVelocityGizmo;
+        [SerializeField] private bool _drawVelocityGizmo = true;
         
         private Vector3 _upAxis;
         private Vector3 _rightAxis;

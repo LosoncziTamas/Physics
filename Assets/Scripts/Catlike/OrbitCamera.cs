@@ -18,6 +18,8 @@ namespace Catlike
         [SerializeField] private LayerMask _obstructionMask = -1;
         
         private Quaternion _gravityAlignment = Quaternion.identity;
+        // Orbit rotation logic should be independent from gravity alignment.
+        private Quaternion _orbitRotation = Quaternion.identity;
         private Vector3 _focusPoint;
         private Vector3 _previousFocusPoint;
         private Transform _cachedTransform;
@@ -57,28 +59,25 @@ namespace Catlike
             }
         }
 
-        private void Start()
+        private void Awake()
         {
             _focusPoint = _focus.position;
             _cachedTransform = transform;
-            _cachedTransform.localRotation = Quaternion.Euler(_orbitAngles);
+            _cachedTransform.localRotation = _orbitRotation = Quaternion.Euler(_orbitAngles);
         }
 
         private void LateUpdate()
         {
-            // create alignment from the last aligned up direction to the current up direction
-            _gravityAlignment = Quaternion.FromToRotation(_gravityAlignment * Vector3.up, -Physics.gravity.normalized) * _gravityAlignment;
+            // Create alignment from the last aligned up direction to the current up direction (minimal rotation).
+            var fromLastGravityAlignmentToCurrent = Quaternion.FromToRotation(_gravityAlignment * Vector3.up, -Physics.gravity.normalized);
+            _gravityAlignment = fromLastGravityAlignmentToCurrent * _gravityAlignment;
             UpdateFocusPoint();
-            Quaternion lookRotation;
             if (ManualRotation() || AutomaticRotation())
             {
                 ConstrainAngles();
-                lookRotation = Quaternion.Euler(_orbitAngles);
+                _orbitRotation =  Quaternion.Euler(_orbitAngles);
             }
-            else
-            {
-                lookRotation = _cachedTransform.localRotation;
-            }
+            var lookRotation = _gravityAlignment * _orbitRotation;
             var lookDirection = lookRotation * Vector3.forward;
             var lookPosition = _focusPoint - lookDirection * _distance;
 
@@ -122,7 +121,9 @@ namespace Catlike
             {
                 return false;
             }
-            var movement = new Vector2(_focusPoint.x - _previousFocusPoint.x, _focusPoint.z - _previousFocusPoint.z);
+            // Undo the gravity alignment
+            var alignedDelta = Quaternion.Inverse(_gravityAlignment) * (_focusPoint - _previousFocusPoint);
+            var movement = new Vector2(alignedDelta.x, alignedDelta.z);
             var movementDeltaSqr = movement.sqrMagnitude;
             if (movementDeltaSqr < 0.0001f)
             {
