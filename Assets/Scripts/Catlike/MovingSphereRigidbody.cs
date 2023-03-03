@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Catlike
@@ -40,6 +39,7 @@ namespace Catlike
         private int _stepsSinceLastGrounded;
         private int _stepsSinceLastJump;
         private Renderer _renderer;
+        private Vector3 _offset;
 
         private bool OnGround => _groundContactCount > 0;
         private bool OnSteep => _steepContactCount > 0;
@@ -70,14 +70,13 @@ namespace Catlike
                 // Determine direction of movement
                 _rightAxis = ProjectDirectionOnPlane(_playerInputSpace.right, _upAxis);
                 _forwardAxis = ProjectDirectionOnPlane(_playerInputSpace.forward, _upAxis);
-                _desiredVelocity = (_forwardAxis * playerInput.y + _rightAxis * playerInput.x) * _maxSpeed;
             }
             else
             {
                 _rightAxis = ProjectDirectionOnPlane(Vector3.right, _upAxis);
                 _forwardAxis = ProjectDirectionOnPlane(Vector3.forward, _upAxis);
-                _desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * _maxSpeed;
             }
+            _desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * _maxSpeed;
             UpdateColor();
         }
         
@@ -86,6 +85,7 @@ namespace Catlike
             var playerInput = Vector2.zero;
             playerInput.x = Input.GetAxis("Horizontal");
             playerInput.y = Input.GetAxis("Vertical");
+            playerInput = Vector2.ClampMagnitude(playerInput, 1f);
             _desiredJump |= Input.GetButtonDown("Jump");
             return playerInput;
         }
@@ -272,44 +272,41 @@ namespace Catlike
             }
             return false;
         }
-
-        private Vector3 _offset;
         
         private void AdjustVelocity()
         {
             // Get z and x axis in terms of the contact plane coordinates.
             var xAxis = ProjectDirectionOnPlane(_rightAxis, _contactNormal);
             var zAxis = ProjectDirectionOnPlane(_forwardAxis, _contactNormal);
+            
             // Determine the current velocity in these dimensions.
             var currentX = Vector3.Dot(_velocity, xAxis);
             var currentZ = Vector3.Dot(_velocity, zAxis);
+            
             var acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
             var maxSpeedChange = acceleration * Time.deltaTime;
+            
             // Determine new velocity.
             var newX = Mathf.MoveTowards(currentX, _desiredVelocity.x, maxSpeedChange);
             var newZ = Mathf.MoveTowards(currentZ, _desiredVelocity.z, maxSpeedChange);
+            
             // Calculate the difference.
             var deltaX = newX - currentX;
             var deltaZ = newZ - currentZ;
-            // TODO: remove
+
             _offset = xAxis * deltaX + zAxis * deltaZ;
             // Add to current velocity in the appropriate dimensions.
-            _velocity += xAxis * deltaX + zAxis * deltaZ;
+            _velocity += _offset;
         }
-        
-        
+
         private void OnDrawGizmos()
         {
             if (_drawVelocityGizmo)
             {
-                Gizmos.color = Color.red;
-                Gizmos.DrawLine(transform.position, transform.position + _rightAxis * 2.0f);
-                Gizmos.color = Color.blue;
-                Gizmos.DrawLine(transform.position, transform.position + _forwardAxis * 2.0f);
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawLine(transform.position, transform.position + _desiredVelocity.normalized * 2.0f);
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawLine(transform.position, transform.position + _velocity.normalized * 2.0f);
                 Gizmos.color = Color.white;
-                Gizmos.DrawLine(transform.position, transform.position + _offset.normalized * 2.0f);
+                Gizmos.DrawLine(transform.position, transform.position + _contactNormal.normalized * 2.0f);
             }
         }
 
