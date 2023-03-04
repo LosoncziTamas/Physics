@@ -46,16 +46,13 @@ namespace Catlike
 
         private void Awake()
         {
-            OnValidate();
-        }
-
-        private void Start()
-        {
             _rigidbody = GetComponent<Rigidbody>();
+            _rigidbody.useGravity = false;
             _renderer = GetComponent<Renderer>();
             _upAxis = -Physics.gravity.normalized;
+            OnValidate();
         }
-
+        
         private void OnValidate()
         {
             _minGroundDotProduct = Mathf.Cos(_maxGroundAngle * Mathf.Deg2Rad);
@@ -97,14 +94,15 @@ namespace Catlike
 
         private void FixedUpdate()
         {
-            _upAxis = -Physics.gravity.normalized;
+            var gravity = CustomGravity.GetGravity(_rigidbody.position, out _upAxis);
             UpdateState();
             AdjustVelocity();
             if (_desiredJump)
             {
                 _desiredJump = false;
-                Jump();
+                Jump(gravity);
             }
+            _velocity += gravity * Time.deltaTime;
             _rigidbody.velocity = _velocity;
             ResetState();
         }
@@ -200,7 +198,7 @@ namespace Catlike
             return false;
         }
 
-        private void Jump()
+        private void Jump(Vector3 gravity)
         {
             if (!TryGetJumpDirection(out var jumpDirection))
             {
@@ -209,7 +207,7 @@ namespace Catlike
             jumpDirection = (jumpDirection + _upAxis).normalized;
             _stepsSinceLastJump = 0;
             _activeJumpCount++;
-            var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight);
+            var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight, gravity);
             var alignedSpeed = Vector3.Dot(_velocity, jumpDirection);
             if (alignedSpeed > 0.0f)
             {
@@ -218,9 +216,9 @@ namespace Catlike
             _velocity += jumpDirection * jumpSpeed;
         }
 
-        private static float CalculateGravitationalEscapeSpeed(float height)
+        private static float CalculateGravitationalEscapeSpeed(float height, Vector3 gravity)
         {
-            return Mathf.Sqrt(2f * Physics.gravity.magnitude * height);
+            return Mathf.Sqrt(2f * gravity.magnitude * height);
         }
 
         private void OnCollisionStay(Collision collision)

@@ -69,7 +69,7 @@ namespace Catlike
         private void LateUpdate()
         {
             // Create alignment from the last aligned up direction to the current up direction (minimal rotation).
-            var fromLastGravityAlignmentToCurrent = Quaternion.FromToRotation(_gravityAlignment * Vector3.up, -Physics.gravity.normalized);
+            var fromLastGravityAlignmentToCurrent = Quaternion.FromToRotation(_gravityAlignment * Vector3.up, CustomGravity.GetUpAxis(_focusPoint));
             _gravityAlignment = fromLastGravityAlignmentToCurrent * _gravityAlignment;
             UpdateFocusPoint();
             if (ManualRotation() || AutomaticRotation())
