@@ -16,6 +16,7 @@ namespace Catlike
         [SerializeField, Range(0f, 90f)] private float _alignSmoothRange = 45f;
         [SerializeField] private Camera _regularCamera;
         [SerializeField] private LayerMask _obstructionMask = -1;
+        [SerializeField, Min(0f)] private float _upAlignmentSpeedInDegreesPerSecond = 360.0f;
         
         private Quaternion _gravityAlignment = Quaternion.identity;
         // Orbit rotation logic should be independent from gravity alignment.
@@ -68,9 +69,7 @@ namespace Catlike
 
         private void LateUpdate()
         {
-            // Create alignment from the last aligned up direction to the current up direction (minimal rotation).
-            var fromLastGravityAlignmentToCurrent = Quaternion.FromToRotation(_gravityAlignment * Vector3.up, CustomGravity.GetUpAxis(_focusPoint));
-            _gravityAlignment = fromLastGravityAlignmentToCurrent * _gravityAlignment;
+            UpdateGravityAlignment();
             UpdateFocusPoint();
             if (ManualRotation() || AutomaticRotation())
             {
@@ -98,6 +97,29 @@ namespace Catlike
             
             // Align to look at focus point from given distance
             _cachedTransform.SetPositionAndRotation(lookPosition, lookRotation);
+        }
+
+        private void UpdateGravityAlignment()
+        {
+            // Create alignment from the last aligned up direction to the current up direction (minimal rotation).
+            var fromUp = _gravityAlignment * Vector3.up;
+            var toUp = CustomGravity.GetUpAxis(_focusPoint);
+            var dot = Vector3.Dot(fromUp, toUp);
+            // Sanitize precision errors.
+            var dotClamped = Mathf.Clamp(dot, -1, 1);
+            var angleBetweenUpVectors = Mathf.Acos(dotClamped) * Mathf.Rad2Deg;
+            var maxAngleForFrame = _upAlignmentSpeedInDegreesPerSecond * Time.deltaTime;
+            var newAlignment = Quaternion.FromToRotation(fromUp, toUp) * _gravityAlignment;
+            if (angleBetweenUpVectors <= maxAngleForFrame)
+            {
+                _gravityAlignment = newAlignment;
+            }
+            else
+            {
+                // Interpolating between rotations.
+                var t = maxAngleForFrame / angleBetweenUpVectors;
+                _gravityAlignment = Quaternion.SlerpUnclamped(_gravityAlignment, newAlignment, t);
+            }
         }
         
         private bool ManualRotation () {
