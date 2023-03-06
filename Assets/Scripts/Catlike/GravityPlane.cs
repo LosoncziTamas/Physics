@@ -18,7 +18,13 @@ namespace Catlike
             {
                 return Vector3.zero;
             }
-            return -_gravity * up;
+
+            var g = -_gravity;
+            if (distance > 0f)
+            {
+                g *= 1f - distance / _range;
+            }
+            return g * up;
         }
 
         private void OnDrawGizmos()
