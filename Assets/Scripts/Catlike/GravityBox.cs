@@ -23,6 +23,21 @@ namespace Catlike
             _innerFalloffDistance = Mathf.Max(Mathf.Min(_innerFalloffDistance, minDimension), _innerDistance);
         }
 
+        public float GetGravityComponent(float coordinateRelativeToBoxCenter, float distanceToNearestFace)
+        {
+            if (distanceToNearestFace > _innerFalloffDistance)
+            {
+                return 0f;
+            }
+            var result = _gravity;
+            if (distanceToNearestFace > _innerDistance)
+            {
+                var innerFalloffFactor = 1f / (_innerFalloffDistance - _innerDistance);
+                result *= 1f - (distanceToNearestFace - _innerDistance) * _innerFalloffDistance;
+            }
+            return coordinateRelativeToBoxCenter > 0 ? -result : result;
+        }
+
         private void OnDrawGizmos()
         {
             Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
