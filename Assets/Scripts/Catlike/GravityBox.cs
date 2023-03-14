@@ -6,7 +6,10 @@ namespace Catlike
     public class GravityBox : GravitySource
     {
         [SerializeField] private float _gravity = 9.81f;
+        
+        [Tooltip("Distances from the center straight to the faces")]
         [SerializeField] private Vector3 _boundaryDistance = Vector3.one;
+        
         [SerializeField, Min(0f)] private float _innerDistance = 0f;
         [SerializeField, Min(0f)] private float _innerFalloffDistance = 0f;
 
@@ -33,9 +36,43 @@ namespace Catlike
             if (distanceToNearestFace > _innerDistance)
             {
                 var innerFalloffFactor = 1f / (_innerFalloffDistance - _innerDistance);
-                result *= 1f - (distanceToNearestFace - _innerDistance) * _innerFalloffDistance;
+                result *= 1f - (distanceToNearestFace - _innerDistance) * innerFalloffFactor;
             }
             return coordinateRelativeToBoxCenter > 0 ? -result : result;
+        }
+
+        public override Vector3 GetGravity(Vector3 position)
+        {
+            // Get box relative position. InverseTransformDirection is used to support arbitrary rotation.
+            position = transform.InverseTransformDirection(position - transform.position);
+            var vector = Vector3.zero;
+            // Determine absolute distance.
+            Vector3 distances;
+            distances.x = _boundaryDistance.x - Mathf.Abs(position.x);
+            distances.y = _boundaryDistance.y - Mathf.Abs(position.y);
+            distances.z = _boundaryDistance.z - Mathf.Abs(position.z);
+            // Getting the gravity for the nearest face.
+            if (distances.x < distances.y)
+            {
+                if (distances.x < distances.z)
+                {
+                    vector.x = GetGravityComponent(position.x, distances.x);
+                }
+                else
+                {
+                    vector.z = GetGravityComponent(position.z, distances.z);
+                }
+            }
+            else if (distances.y < distances.z)
+            {
+                vector.y = GetGravityComponent(position.y, distances.y);
+            }
+            else
+            {
+                vector.z = GetGravityComponent(position.z, distances.z);
+            }
+            // Rotate back the gravity.
+            return transform.TransformDirection(vector);
         }
 
         private void OnDrawGizmos()
