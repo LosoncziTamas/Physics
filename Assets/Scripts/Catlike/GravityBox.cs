@@ -12,6 +12,8 @@ namespace Catlike
         
         [SerializeField, Min(0f)] private float _innerDistance = 0f;
         [SerializeField, Min(0f)] private float _innerFalloffDistance = 0f;
+        [SerializeField, Min(0f)] private float _outerDistance = 0f;
+        [SerializeField, Min(0f)] private float _outerFalloffDistance = 0f;
 
         private void Awake()
         {
@@ -20,13 +22,14 @@ namespace Catlike
 
         private void OnValidate()
         {
+            _outerFalloffDistance = Mathf.Max(_outerFalloffDistance, _outerDistance);
             _boundaryDistance = Vector3.Max(_boundaryDistance, Vector3.zero);
             var minDimension = Mathf.Min(_boundaryDistance.x, _boundaryDistance.y, _boundaryDistance.z);
             _innerDistance = Mathf.Min(_innerDistance, minDimension);
             _innerFalloffDistance = Mathf.Max(Mathf.Min(_innerFalloffDistance, minDimension), _innerDistance);
         }
 
-        public float GetGravityComponent(float coordinateRelativeToBoxCenter, float distanceToNearestFace)
+        private float GetGravityComponent(float coordinateRelativeToBoxCenter, float distanceToNearestFace)
         {
             if (distanceToNearestFace > _innerFalloffDistance)
             {
@@ -43,8 +46,10 @@ namespace Catlike
 
         public override Vector3 GetGravity(Vector3 position)
         {
-            // Get box relative position. InverseTransformDirection is used to support arbitrary rotation.
-            position = transform.InverseTransformDirection(position - transform.position);
+            // Get box relative position. 
+            var boxRelativePosition = position - transform.position;
+            // InverseTransformDirection is used to support arbitrary box rotation.
+            position = transform.InverseTransformDirection(boxRelativePosition);
             var vector = Vector3.zero;
             // Determine absolute distance.
             Vector3 distances;
@@ -97,6 +102,67 @@ namespace Catlike
             }
             Gizmos.color = Color.red;
             Gizmos.DrawWireCube(Vector3.zero, 2f * _boundaryDistance);
+            if (_outerDistance > 0f) {
+                Gizmos.color = Color.yellow;
+                DrawGizmosOuterCube(_outerDistance);
+            }
+            if (_outerFalloffDistance > _outerDistance) {
+                Gizmos.color = Color.cyan;
+                DrawGizmosOuterCube(_outerFalloffDistance);
+            }
+        }
+        
+        private static void DrawGizmosRect(Vector3 a, Vector3 b, Vector3 c, Vector3 d) 
+        {
+            Gizmos.DrawLine(a, b);
+            Gizmos.DrawLine(b, c);
+            Gizmos.DrawLine(c, d);
+            Gizmos.DrawLine(d, a);
+        }
+        
+        private void DrawGizmosOuterCube(float distance) 
+        {
+            Vector3 a, b, c, d;
+            a.y = b.y = _boundaryDistance.y;
+            d.y = c.y = -_boundaryDistance.y;
+            b.z = c.z = _boundaryDistance.z;
+            d.z = a.z = -_boundaryDistance.z;
+            // Draw right face
+            a.x = b.x = c.x = d.x = _boundaryDistance.x + distance;
+            DrawGizmosRect(a, b, c, d);
+            // Draw left face
+            a.x = b.x = c.x = d.x = -a.x;
+            DrawGizmosRect(a, b, c, d);
+            
+            a.x = d.x = _boundaryDistance.x;
+            b.x = c.x = -_boundaryDistance.x;
+            a.z = b.z = _boundaryDistance.z;
+            c.z = d.z = -_boundaryDistance.z;
+            a.y = b.y = c.y = d.y = _boundaryDistance.y + distance;
+            // Draw upper face
+            DrawGizmosRect(a, b, c, d);
+            // Draw lower face
+            a.y = b.y = c.y = d.y = -a.y;
+            DrawGizmosRect(a, b, c, d);
+
+            a.x = d.x = _boundaryDistance.x;
+            b.x = c.x = -_boundaryDistance.x;
+            a.y = b.y = _boundaryDistance.y;
+            c.y = d.y = -_boundaryDistance.y;
+            a.z = b.z = c.z = d.z = _boundaryDistance.z + distance;
+            // Draw front face
+            DrawGizmosRect(a, b, c, d);
+            // Draw back face
+            a.z = b.z = c.z = d.z = -a.z;
+            DrawGizmosRect(a, b, c, d);
+            
+            // √(1/3).
+            distance *= 0.5773502692f;
+            var size = _boundaryDistance;
+            size.x = 2f * (size.x + distance);
+            size.y = 2f * (size.y + distance);
+            size.z = 2f * (size.z + distance); 
+            Gizmos.DrawWireCube(Vector3.zero, size);
         }
     }
 }
