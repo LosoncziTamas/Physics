@@ -51,6 +51,56 @@ namespace Catlike
             // InverseTransformDirection is used to support arbitrary box rotation.
             position = transform.InverseTransformDirection(boxRelativePosition);
             var vector = Vector3.zero;
+            // Determine outside face count and vector
+            var outside = 0;
+            if (position.x > _boundaryDistance.x)
+            {
+                vector.x = _boundaryDistance.x - position.x;
+                outside = 1;
+            }
+            else if (position.x < -_boundaryDistance.x)
+            {
+                vector.x = -_boundaryDistance.x - position.x;
+                outside = 1;
+            }
+            if (position.y > _boundaryDistance.y)
+            {
+                vector.y = _boundaryDistance.y - position.y;
+                outside += 1;
+            }
+            else if (position.y < -_boundaryDistance.y)
+            {
+                vector.y = -_boundaryDistance.y - position.y;
+                outside += 1;
+            }
+            if (position.z > _boundaryDistance.z)
+            {
+                vector.z = _boundaryDistance.z - position.z;
+                outside += 1;
+            }
+            else if (position.z < -_boundaryDistance.z)
+            {
+                vector.z = -_boundaryDistance.z - position.z;
+                outside += 1;
+            }
+
+            if (outside > 0)
+            {
+                // Micro optimization in case of being outside of only one face.
+                var distance = outside == 1 ? Mathf.Abs(vector.x + vector.y + vector.z) : vector.magnitude;                
+                if (distance > _outerFalloffDistance)
+                {
+                    return Vector3.zero;
+                }
+                var g = _gravity / distance;
+                if (distance > _outerDistance)
+                {
+                    var outerFalloffFactor = 1 / (_outerFalloffDistance - _outerDistance);
+                    g *= 1f - (distance - _outerDistance) * outerFalloffFactor;
+                }
+                return transform.TransformDirection(g * vector);
+            }
+            
             // Determine absolute distance.
             Vector3 distances;
             distances.x = _boundaryDistance.x - Mathf.Abs(position.x);
