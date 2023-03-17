@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Catlike
@@ -27,6 +28,9 @@ namespace Catlike
         
         private Vector3 _velocity;
         private Vector3 _desiredVelocity;
+        private Vector3 _connectionVelocity;
+        private Vector3 _connectionWorldPosition;
+        private Vector3 _connectionLocalPosition;
         private Rigidbody _rigidbody;
         private Vector3 _contactNormal;
         private Vector3 _steepNormal;
@@ -40,6 +44,8 @@ namespace Catlike
         private int _stepsSinceLastJump;
         private Renderer _renderer;
         private Vector3 _offset;
+        private Rigidbody _connectedBody;
+        private Rigidbody _previousConnectedBody;
 
         private bool OnGround => _groundContactCount > 0;
         private bool OnSteep => _steepContactCount > 0;
@@ -129,6 +135,26 @@ namespace Catlike
             {
                 _contactNormal = _upAxis;
             }
+
+            if (_connectedBody)
+            {
+                var eligibleForConnection = _connectedBody.isKinematic || _connectedBody.mass >= _rigidbody.mass;
+                if (eligibleForConnection)
+                {
+                    UpdateConnectionState();
+                }
+            }
+        }
+
+        private void UpdateConnectionState()
+        {
+            if (_previousConnectedBody == _connectedBody)
+            {
+                var connectionMovement = _connectedBody.transform.TransformPoint(_connectionLocalPosition) - _connectionWorldPosition;
+                _connectionVelocity = connectionMovement / Time.deltaTime;
+            }
+            _connectionWorldPosition = _rigidbody.position;
+            _connectionLocalPosition = _connectedBody.transform.InverseTransformPoint(_connectionWorldPosition);
         }
 
         private bool SnapToGround()
@@ -160,13 +186,16 @@ namespace Catlike
                 // adjust velocity to align with the ground
                 _velocity = (_velocity - hit.normal * dot).normalized * speed;
             }
+            _connectedBody = hit.rigidbody;
             return true;
         }
 
         private void ResetState()
         {
             _groundContactCount = _steepContactCount = 0;
-            _contactNormal = _steepNormal = Vector3.zero;
+            _connectionVelocity = _contactNormal = _steepNormal = Vector3.zero;
+            _previousConnectedBody = _connectedBody;
+            _connectedBody = null;
         }
 
         private bool TryGetJumpDirection(out Vector3 jumpDirection)
@@ -238,11 +267,12 @@ namespace Catlike
             {
                 var normal = collision.GetContact(i).normal;
                 var upDot = Vector3.Dot(_upAxis, normal);
-                var isGround = upDot > minDot;
+                var isGround = upDot >= minDot;
                 if (isGround)
                 {
                     _groundContactCount++;
                     _contactNormal += normal;
+                    _connectedBody = collision.rigidbody;
                     continue;
                 }
                 var isSteep = normal.y > -0.01f;
@@ -250,6 +280,11 @@ namespace Catlike
                 {
                     _steepContactCount++;
                     _steepNormal += normal;
+                    // Prefer ground over slope.
+                    if (_groundContactCount == 0) 
+                    {
+                        _connectedBody = collision.rigidbody;
+                    }
                 }
             }
         }
@@ -277,9 +312,11 @@ namespace Catlike
             var xAxis = ProjectDirectionOnPlane(_rightAxis, _contactNormal);
             var zAxis = ProjectDirectionOnPlane(_forwardAxis, _contactNormal);
             
+            // Adjust velocity relatively to the connection velocity.
+            var relativeVelocity = _velocity - _connectionVelocity;
             // Determine the current velocity in these dimensions.
-            var currentX = Vector3.Dot(_velocity, xAxis);
-            var currentZ = Vector3.Dot(_velocity, zAxis);
+            var currentX = Vector3.Dot(relativeVelocity, xAxis);
+            var currentZ = Vector3.Dot(relativeVelocity, zAxis);
             
             var acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
             var maxSpeedChange = acceleration * Time.deltaTime;
