@@ -15,6 +15,7 @@ namespace Catlike
         [SerializeField, Range(0, 5)] private int _maxAirJumpCount;
         [SerializeField, Range(0f, 90f)] private float _maxGroundAngle = 25f;
         [SerializeField, Range(0f, 90f)] private float _maxStairsAngle = 50f;
+        [SerializeField, Range(90f, 180f)] private float _maxClimbAngle = 140;
         [SerializeField, Range(0f, 100f)] private float _maxSnapSpeed = 100f;
         [SerializeField, Min(0f)] private float _probeDistance = 1f;
         [SerializeField] private LayerMask _probeMask = -1;
@@ -34,12 +35,15 @@ namespace Catlike
         private Rigidbody _rigidbody;
         private Vector3 _contactNormal;
         private Vector3 _steepNormal;
+        private Vector3 _climbNormal;
         private int _groundContactCount;
         private int _steepContactCount;
+        private int _climbContactCount;
         private bool _desiredJump;
         private int _activeJumpCount;
         private float _minGroundDotProduct;
         private float _minStairsDotProduct;
+        private float _minClimbDotProduct;
         private int _stepsSinceLastGrounded;
         private int _stepsSinceLastJump;
         private Renderer _renderer;
@@ -63,6 +67,7 @@ namespace Catlike
         {
             _minGroundDotProduct = Mathf.Cos(_maxGroundAngle * Mathf.Deg2Rad);
             _minStairsDotProduct = Mathf.Cos(_maxStairsAngle * Mathf.Deg2Rad);
+            _minClimbDotProduct = Mathf.Cos(_maxClimbAngle * Mathf.Deg2Rad);
         }
         
         private void Update()
@@ -192,8 +197,8 @@ namespace Catlike
 
         private void ResetState()
         {
-            _groundContactCount = _steepContactCount = 0;
-            _connectionVelocity = _contactNormal = _steepNormal = Vector3.zero;
+            _groundContactCount = _steepContactCount = _climbContactCount = 0;
+            _connectionVelocity = _contactNormal = _steepNormal = _climbNormal = Vector3.zero;
             _previousConnectedBody = _connectedBody;
             _connectedBody = null;
         }
@@ -285,6 +290,13 @@ namespace Catlike
                     {
                         _connectedBody = collision.rigidbody;
                     }
+                }
+                var isClimbable = upDot >= _minClimbDotProduct;
+                if (isClimbable)
+                {
+                    _climbContactCount++;
+                    _climbNormal += normal;
+                    _connectedBody = collision.rigidbody;
                 }
             }
         }
