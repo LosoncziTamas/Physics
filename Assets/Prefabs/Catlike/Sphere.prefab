@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 6315726874829106889}
   - component: {fileID: 6315726874829106891}
   - component: {fileID: 197969860796230198}
-  - component: {fileID: 5360205307190857649}
   m_Layer: 3
   m_Name: Sphere
   m_TagString: Untagged
@@ -235,6 +234,7 @@ MonoBehaviour:
   _maxAirJumpCount: 1
   _maxGroundAngle: 52
   _maxStairsAngle: 50
+  _maxClimbAngle: 140
   _maxSnapSpeed: 100
   _probeDistance: 1
   _probeMask:
@@ -243,17 +243,10 @@ MonoBehaviour:
   _stairsMask:
     serializedVersion: 2
     m_Bits: 128
+  _climbMask:
+    serializedVersion: 2
+    m_Bits: 443
   _playerInputSpace: {fileID: 0}
   _drawVelocityGizmo: 1
---- !u!114 &5360205307190857649
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6315726874829106892}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbf5bae358d5470d9bcd74d8366581b0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  _normalMaterial: {fileID: 2100000, guid: 7735ab06de48f48299d6704bcb9ad6f5, type: 2}
+  _climbingMaterial: {fileID: 2100000, guid: fa73f823fc95e465dbcbabf4b9816180, type: 2}

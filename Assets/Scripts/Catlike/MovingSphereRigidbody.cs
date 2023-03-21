@@ -20,8 +20,11 @@ namespace Catlike
         [SerializeField, Min(0f)] private float _probeDistance = 1f;
         [SerializeField] private LayerMask _probeMask = -1;
         [SerializeField] private LayerMask _stairsMask = -1;
+        [SerializeField] private LayerMask _climbMask = -1;
         [SerializeField] private Transform _playerInputSpace = default;
         [SerializeField] private bool _drawVelocityGizmo = true;
+        [SerializeField] private Material _normalMaterial;
+        [SerializeField] private Material _climbingMaterial;
         
         private Vector3 _upAxis;
         private Vector3 _rightAxis;
@@ -53,6 +56,7 @@ namespace Catlike
 
         private bool OnGround => _groundContactCount > 0;
         private bool OnSteep => _steepContactCount > 0;
+        private bool Climbing => _climbContactCount > 0;
 
         private void Awake()
         {
@@ -100,7 +104,8 @@ namespace Catlike
 
         private void UpdateColor()
         {
-            _renderer.material.SetColor(ColorProperty, OnGround ? Color.black : Color.white);
+            _renderer.material = Climbing ? _climbingMaterial : _normalMaterial;
+            // _renderer.material.SetColor(ColorProperty, OnGround ? Color.black : Color.white);
         }
 
         private void FixedUpdate()
@@ -113,7 +118,11 @@ namespace Catlike
                 _desiredJump = false;
                 Jump(gravity);
             }
-            _velocity += gravity * Time.deltaTime;
+
+            if (!Climbing)
+            {
+                _velocity += gravity * Time.deltaTime;
+            }
             _rigidbody.velocity = _velocity;
             ResetState();
         }
@@ -123,7 +132,7 @@ namespace Catlike
             _stepsSinceLastGrounded++;
             _stepsSinceLastJump++;
             _velocity = _rigidbody.velocity;
-            if (OnGround || SnapToGround() || CheckSteepContacts())
+            if (CheckClimbing() ||  OnGround || SnapToGround() || CheckSteepContacts())
             {
                 _stepsSinceLastGrounded = 0;
                 // Checking false landing.
@@ -267,7 +276,8 @@ namespace Catlike
 
         private void EvaluateCollision(Collision collision)
         {
-            var minDot = GetMinDot(collision.gameObject.layer);
+            var layer = collision.gameObject.layer;
+            var minDot = GetMinDot(layer);
             for (var i = 0; i < collision.contactCount; i++) 
             {
                 var normal = collision.GetContact(i).normal;
@@ -291,7 +301,7 @@ namespace Catlike
                         _connectedBody = collision.rigidbody;
                     }
                 }
-                var isClimbable = upDot >= _minClimbDotProduct;
+                var isClimbable = upDot >= _minClimbDotProduct && MaskIsSet(_climbMask, layer);
                 if (isClimbable)
                 {
                     _climbContactCount++;
@@ -320,10 +330,23 @@ namespace Catlike
         
         private void AdjustVelocity()
         {
-            // Get z and x axis in terms of the contact plane coordinates.
-            var xAxis = ProjectDirectionOnPlane(_rightAxis, _contactNormal);
-            var zAxis = ProjectDirectionOnPlane(_forwardAxis, _contactNormal);
+            Vector3 xAxis, zAxis;
+            if (Climbing)
+            {
+                xAxis = Vector3.Cross(_contactNormal, _upAxis);
+                // Use up axis for z when climbing
+                zAxis = _upAxis;
+            }
+            else
+            {
+                xAxis = _rightAxis;
+                zAxis = _forwardAxis;
+            }
             
+            // Get z and x axis in terms of the contact plane coordinates.
+            xAxis = ProjectDirectionOnPlane(xAxis, _contactNormal);
+            zAxis = ProjectDirectionOnPlane(zAxis, _contactNormal);
+
             // Adjust velocity relatively to the connection velocity.
             var relativeVelocity = _velocity - _connectionVelocity;
             // Determine the current velocity in these dimensions.
@@ -365,7 +388,23 @@ namespace Catlike
 
         private float GetMinDot(int layerIndex)
         {
-            return (_stairsMask & (1 << layerIndex)) == 0 ? _minGroundDotProduct : _minStairsDotProduct;
+            return MaskIsSet(_stairsMask, layerIndex) ? _minGroundDotProduct : _minStairsDotProduct;
+        }
+
+        private static bool MaskIsSet(LayerMask layerMask, int layerIndex)
+        {
+            return (layerMask & (1 << layerIndex)) != 0;
+        }
+        
+        private bool CheckClimbing()
+        {
+            if (!Climbing)
+            {
+                return false;
+            }
+            _groundContactCount = _climbContactCount;
+            _contactNormal = _climbNormal;
+            return true;
         }
     }
 }
