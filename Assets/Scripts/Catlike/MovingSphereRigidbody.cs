@@ -9,8 +9,10 @@ namespace Catlike
         private static readonly int ColorProperty = Shader.PropertyToID("_Color");
         
         [SerializeField, Range(0f, 100f)] private float _maxSpeed = 10f;
+        [SerializeField, Range(0f, 100f)] private float _maxClimbSpeed = 2f;
         [SerializeField, Range(0f, 100f)] private float _maxAcceleration = 10f;
         [SerializeField, Range(0f, 100f)] float _maxAirAcceleration = 1f;
+        [SerializeField, Range(0f, 100f)] float _maxClimbAcceleration = 20f;
         [SerializeField, Range(0f, 10f)] private float _jumpHeight = 2f;
         [SerializeField, Range(0, 5)] private int _maxAirJumpCount;
         [SerializeField, Range(0f, 90f)] private float _maxGroundAngle = 25f;
@@ -29,9 +31,9 @@ namespace Catlike
         private Vector3 _upAxis;
         private Vector3 _rightAxis;
         private Vector3 _forwardAxis;
+        private Vector2 _playerInput;
         
         private Vector3 _velocity;
-        private Vector3 _desiredVelocity;
         private Vector3 _connectionVelocity;
         private Vector3 _connectionWorldPosition;
         private Vector3 _connectionLocalPosition;
@@ -76,7 +78,7 @@ namespace Catlike
         
         private void Update()
         {
-            var playerInput = ReadInput();
+            _playerInput = ReadInput();
             if (_playerInputSpace)
             {
                 // Determine direction of movement
@@ -88,7 +90,6 @@ namespace Catlike
                 _rightAxis = ProjectDirectionOnPlane(Vector3.right, _upAxis);
                 _forwardAxis = ProjectDirectionOnPlane(Vector3.forward, _upAxis);
             }
-            _desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * _maxSpeed;
             UpdateColor();
         }
         
@@ -330,15 +331,20 @@ namespace Catlike
         
         private void AdjustVelocity()
         {
+            float acceleration, speed;
             Vector3 xAxis, zAxis;
             if (Climbing)
             {
+                acceleration = _maxClimbAcceleration;
+                speed = _maxClimbSpeed;
                 xAxis = Vector3.Cross(_contactNormal, _upAxis);
                 // Use up axis for z when climbing
                 zAxis = _upAxis;
             }
             else
             {
+                acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
+                speed = _maxSpeed;
                 xAxis = _rightAxis;
                 zAxis = _forwardAxis;
             }
@@ -353,12 +359,11 @@ namespace Catlike
             var currentX = Vector3.Dot(relativeVelocity, xAxis);
             var currentZ = Vector3.Dot(relativeVelocity, zAxis);
             
-            var acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
             var maxSpeedChange = acceleration * Time.deltaTime;
             
             // Determine new velocity.
-            var newX = Mathf.MoveTowards(currentX, _desiredVelocity.x, maxSpeedChange);
-            var newZ = Mathf.MoveTowards(currentZ, _desiredVelocity.z, maxSpeedChange);
+            var newX = Mathf.MoveTowards(currentX, _playerInput.x * speed, maxSpeedChange);
+            var newZ = Mathf.MoveTowards(currentZ, _playerInput.y * speed, maxSpeedChange);
             
             // Calculate the difference.
             var deltaX = newX - currentX;
