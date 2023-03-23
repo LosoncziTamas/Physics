@@ -58,7 +58,9 @@ namespace Catlike
 
         private bool OnGround => _groundContactCount > 0;
         private bool OnSteep => _steepContactCount > 0;
-        private bool Climbing => _climbContactCount > 0;
+        
+        // Checking number of steps to avoid slowing the jump.
+        private bool Climbing => _climbContactCount > 0 && _stepsSinceLastJump > 2;
 
         private void Awake()
         {
@@ -120,7 +122,12 @@ namespace Catlike
                 Jump(gravity);
             }
 
-            if (!Climbing)
+            if (Climbing)
+            {
+                // Applying grip strength
+                _velocity -= _contactNormal * (_maxClimbAcceleration * Time.deltaTime * 0.9f);
+            }
+            else
             {
                 _velocity += gravity * Time.deltaTime;
             }
