@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Catlike
@@ -6,8 +5,6 @@ namespace Catlike
     [RequireComponent(typeof(Rigidbody))]
     public class MovingSphereRigidbody : MonoBehaviour
     {
-        private static readonly int ColorProperty = Shader.PropertyToID("_Color");
-        
         [SerializeField, Range(0f, 100f)] private float _maxSpeed = 10f;
         [SerializeField, Range(0f, 100f)] private float _maxClimbSpeed = 2f;
         [SerializeField, Range(0f, 100f)] private float _maxAcceleration = 10f;
@@ -41,10 +38,12 @@ namespace Catlike
         private Vector3 _contactNormal;
         private Vector3 _steepNormal;
         private Vector3 _climbNormal;
+        private Vector3 _lastClimbNormal;
         private int _groundContactCount;
         private int _steepContactCount;
         private int _climbContactCount;
         private bool _desiredJump;
+        private bool _desiresClimbing;
         private int _activeJumpCount;
         private float _minGroundDotProduct;
         private float _minStairsDotProduct;
@@ -102,6 +101,7 @@ namespace Catlike
             playerInput.y = Input.GetAxis("Vertical");
             playerInput = Vector2.ClampMagnitude(playerInput, 1f);
             _desiredJump |= Input.GetButtonDown("Jump");
+            _desiresClimbing = Input.GetButton("Climb");
             return playerInput;
         }
 
@@ -122,10 +122,20 @@ namespace Catlike
                 Jump(gravity);
             }
 
+            var grip = _contactNormal * (_maxClimbAcceleration * 0.9f);
             if (Climbing)
             {
                 // Applying grip strength
-                _velocity -= _contactNormal * (_maxClimbAcceleration * Time.deltaTime * 0.9f);
+                _velocity -= grip * Time.deltaTime;
+            }
+            else if (OnGround && _velocity.sqrMagnitude < 0.01f)
+            {
+                // Eliminate gravity that causes sliding on a slope.
+                _velocity += _contactNormal * (Vector3.Dot(gravity, _contactNormal) * Time.deltaTime);
+            }
+            else if (_desiresClimbing && OnGround)
+            {
+                _velocity += (gravity - grip) * Time.deltaTime;
             }
             else
             {
@@ -310,9 +320,10 @@ namespace Catlike
                     }
                 }
                 var isClimbable = upDot >= _minClimbDotProduct && MaskIsSet(_climbMask, layer);
-                if (isClimbable)
+                if (_desiresClimbing && isClimbable)
                 {
                     _climbContactCount++;
+                    _lastClimbNormal = normal;
                     _climbNormal += normal;
                     _connectedBody = collision.rigidbody;
                 }
@@ -351,7 +362,7 @@ namespace Catlike
             else
             {
                 acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
-                speed = _maxSpeed;
+                speed = OnGround && _desiresClimbing ? _maxClimbSpeed : _maxSpeed;
                 xAxis = _rightAxis;
                 zAxis = _forwardAxis;
             }
@@ -413,6 +424,17 @@ namespace Catlike
             if (!Climbing)
             {
                 return false;
+            }
+            var potentialCrevasses = _climbContactCount > 1; 
+            if (potentialCrevasses)
+            {
+                _climbNormal.Normalize();
+                var upDot = Vector3.Dot(_upAxis, _climbNormal);
+                var isCrevasses = upDot >= _minGroundDotProduct;
+                if (isCrevasses)
+                {
+                    _climbNormal = _lastClimbNormal;
+                }
             }
             _groundContactCount = _climbContactCount;
             _contactNormal = _climbNormal;
