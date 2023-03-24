@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Catlike
@@ -20,10 +21,12 @@ namespace Catlike
         [SerializeField] private LayerMask _probeMask = -1;
         [SerializeField] private LayerMask _stairsMask = -1;
         [SerializeField] private LayerMask _climbMask = -1;
+        [SerializeField] private LayerMask _waterMask = 0;
         [SerializeField] private Transform _playerInputSpace = default;
         [SerializeField] private bool _drawVelocityGizmo = true;
         [SerializeField] private Material _normalMaterial;
         [SerializeField] private Material _climbingMaterial;
+        [SerializeField] private Material _swimmingMaterial;
         
         private Vector3 _upAxis;
         private Vector3 _rightAxis;
@@ -57,6 +60,7 @@ namespace Catlike
 
         private bool OnGround => _groundContactCount > 0;
         private bool OnSteep => _steepContactCount > 0;
+        private bool InWater { get; set; }
         
         // Checking number of steps to avoid slowing the jump.
         private bool Climbing => _climbContactCount > 0 && _stepsSinceLastJump > 2;
@@ -107,7 +111,7 @@ namespace Catlike
 
         private void UpdateColor()
         {
-            _renderer.material = Climbing ? _climbingMaterial : _normalMaterial;
+            _renderer.material = Climbing ? _climbingMaterial : InWater ? _swimmingMaterial : _normalMaterial;
             // _renderer.material.SetColor(ColorProperty, OnGround ? Color.black : Color.white);
         }
 
@@ -200,7 +204,7 @@ namespace Catlike
             {
                 return false;
             }
-            if (!Physics.Raycast(_rigidbody.position, -_upAxis, out var hit, _probeDistance, _probeMask))
+            if (!Physics.Raycast(_rigidbody.position, -_upAxis, out var hit, _probeDistance, _probeMask, QueryTriggerInteraction.Ignore))
             {
                 return false;
             }
@@ -224,6 +228,7 @@ namespace Catlike
 
         private void ResetState()
         {
+            InWater = false;
             _groundContactCount = _steepContactCount = _climbContactCount = 0;
             _connectionVelocity = _contactNormal = _steepNormal = _climbNormal = Vector3.zero;
             _previousConnectedBody = _connectedBody;
@@ -439,6 +444,22 @@ namespace Catlike
             _groundContactCount = _climbContactCount;
             _contactNormal = _climbNormal;
             return true;
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (MaskIsSet(_waterMask, other.gameObject.layer))
+            {
+                InWater = true;
+            }
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (MaskIsSet(_waterMask, other.gameObject.layer))
+            {
+                InWater = true;
+            }
         }
     }
 }

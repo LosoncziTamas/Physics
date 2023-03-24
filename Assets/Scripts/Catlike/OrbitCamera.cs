@@ -89,7 +89,7 @@ namespace Catlike
             var castDirection = castLine / castDistance;
             
             // Pulling camera closer if something blocks the view
-            if (Physics.BoxCast(castFrom, CameraHalfExtends, castDirection, out var hit, lookRotation, castDistance, _obstructionMask))
+            if (Physics.BoxCast(castFrom, CameraHalfExtends, castDirection, out var hit, lookRotation, castDistance, _obstructionMask, QueryTriggerInteraction.Ignore))
             {
                 rectPosition = castFrom + castDirection * hit.distance;
                 lookPosition = rectPosition - rectOffset;
