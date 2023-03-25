@@ -18,6 +18,8 @@ namespace Catlike
         [SerializeField, Range(90f, 180f)] private float _maxClimbAngle = 140;
         [SerializeField, Range(0f, 100f)] private float _maxSnapSpeed = 100f;
         [SerializeField, Min(0f)] private float _probeDistance = 1f;
+        [SerializeField, Min(0.1f)] private float _submergenceRange = 1f;
+        [SerializeField] private float _submergenceOffset = 0.5f;
         [SerializeField] private LayerMask _probeMask = -1;
         [SerializeField] private LayerMask _stairsMask = -1;
         [SerializeField] private LayerMask _climbMask = -1;
@@ -57,10 +59,11 @@ namespace Catlike
         private Vector3 _offset;
         private Rigidbody _connectedBody;
         private Rigidbody _previousConnectedBody;
+        private float _submergence;
 
         private bool OnGround => _groundContactCount > 0;
         private bool OnSteep => _steepContactCount > 0;
-        private bool InWater { get; set; }
+        private bool InWater => _submergence > 0f;
         
         // Checking number of steps to avoid slowing the jump.
         private bool Climbing => _climbContactCount > 0 && _stepsSinceLastJump > 2;
@@ -228,7 +231,7 @@ namespace Catlike
 
         private void ResetState()
         {
-            InWater = false;
+            _submergence = 0;
             _groundContactCount = _steepContactCount = _climbContactCount = 0;
             _connectionVelocity = _contactNormal = _steepNormal = _climbNormal = Vector3.zero;
             _previousConnectedBody = _connectedBody;
@@ -450,7 +453,7 @@ namespace Catlike
         {
             if (MaskIsSet(_waterMask, other.gameObject.layer))
             {
-                InWater = true;
+                EvaluateSubmergence();
             }
         }
 
@@ -458,8 +461,13 @@ namespace Catlike
         {
             if (MaskIsSet(_waterMask, other.gameObject.layer))
             {
-                InWater = true;
+                EvaluateSubmergence();
             }
+        }
+
+        private void EvaluateSubmergence()
+        {
+            _submergence = 1;
         }
     }
 }

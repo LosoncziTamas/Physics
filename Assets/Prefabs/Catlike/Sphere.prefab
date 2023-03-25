@@ -228,8 +228,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxSpeed: 10
+  _maxClimbSpeed: 2
   _maxAcceleration: 33.5
   _maxAirAcceleration: 0
+  _maxClimbAcceleration: 20
   _jumpHeight: 2
   _maxAirJumpCount: 1
   _maxGroundAngle: 52
@@ -246,7 +248,11 @@ MonoBehaviour:
   _climbMask:
     serializedVersion: 2
     m_Bits: 443
+  _waterMask:
+    serializedVersion: 2
+    m_Bits: 16
   _playerInputSpace: {fileID: 0}
   _drawVelocityGizmo: 1
   _normalMaterial: {fileID: 2100000, guid: 7735ab06de48f48299d6704bcb9ad6f5, type: 2}
   _climbingMaterial: {fileID: 2100000, guid: fa73f823fc95e465dbcbabf4b9816180, type: 2}
+  _swimmingMaterial: {fileID: 2100000, guid: 1f236688f827e4ce7b5bd6cefb73810d, type: 2}
