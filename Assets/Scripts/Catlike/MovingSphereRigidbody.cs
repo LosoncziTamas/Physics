@@ -467,7 +467,17 @@ namespace Catlike
 
         private void EvaluateSubmergence()
         {
-            _submergence = 1;
+            var origin = _rigidbody.position + _upAxis * _submergenceOffset;
+            // This is needed to counter invalid value when moving out of the water.
+            var additionalRangeOffset = 1.0f;
+            if (Physics.Raycast(origin, _upAxis, out var hit, _submergenceRange + additionalRangeOffset, _waterMask, QueryTriggerInteraction.Collide))
+            {
+                _submergence = 1 - hit.distance / _submergenceRange;
+            }
+            else
+            {
+                _submergence = 1f;
+            }
         }
     }
 }
