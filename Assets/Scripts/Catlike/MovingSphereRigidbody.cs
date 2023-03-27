@@ -17,8 +17,11 @@ namespace Catlike
         [SerializeField, Range(0f, 90f)] private float _maxStairsAngle = 50f;
         [SerializeField, Range(90f, 180f)] private float _maxClimbAngle = 140;
         [SerializeField, Range(0f, 100f)] private float _maxSnapSpeed = 100f;
+        [SerializeField, Range(0f, 10f)] private float _waterDrag = 1f;
         [SerializeField, Min(0f)] private float _probeDistance = 1f;
         [SerializeField, Min(0.1f)] private float _submergenceRange = 1f;
+        [Tooltip("With zero buoyancy sinks like a rock, an object with a buoyancy of 1 is in equilibrium, buoyancy greater than 1 floats to the surface.")]
+        [SerializeField, Min(0)] private float _buoyancy = 1f;
         [SerializeField] private float _submergenceOffset = 0.5f;
         [SerializeField] private LayerMask _probeMask = -1;
         [SerializeField] private LayerMask _stairsMask = -1;
@@ -114,14 +117,17 @@ namespace Catlike
 
         private void UpdateColor()
         {
-            _renderer.material = Climbing ? _climbingMaterial : InWater ? _swimmingMaterial : _normalMaterial;
-            // _renderer.material.SetColor(ColorProperty, OnGround ? Color.black : Color.white);
+            _renderer.material = Climbing ? _climbingMaterial : _normalMaterial;
         }
 
         private void FixedUpdate()
         {
             var gravity = CustomGravity.GetGravity(_rigidbody.position, out _upAxis);
             UpdateState();
+            if (InWater)
+            {
+                _velocity *= 1 - _waterDrag * _submergence * Time.deltaTime;
+            }
             AdjustVelocity();
             if (_desiredJump)
             {
@@ -134,6 +140,11 @@ namespace Catlike
             {
                 // Applying grip strength
                 _velocity -= grip * Time.deltaTime;
+            }
+            else if (InWater)
+            {
+                var buoyancyValue = 1f - _buoyancy * _submergence;
+                _velocity += gravity * buoyancyValue * Time.deltaTime;
             }
             else if (OnGround && _velocity.sqrMagnitude < 0.01f)
             {
@@ -199,7 +210,7 @@ namespace Catlike
         private bool SnapToGround()
         {
             var speed = _velocity.magnitude;
-            if (_stepsSinceLastGrounded > 1 || _stepsSinceLastJump <= 2)
+            if (_stepsSinceLastGrounded > 1 || _stepsSinceLastJump <= 2 || InWater)
             {
                 return false;
             }
