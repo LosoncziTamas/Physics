@@ -32,6 +32,10 @@ namespace Catlike
         [SerializeField] private Material _normalMaterial;
         [SerializeField] private Material _climbingMaterial;
         [SerializeField] private Material _swimmingMaterial;
+        [SerializeField, Range(0.01f, 1f)] private float _swimThreshold = 0.5f;
+        [SerializeField, Range(0f, 100f)] private float _maxSwimSpeed = 5f;
+        [SerializeField, Range(0f, 100f)] private float _maxSwimAcceleration = 5f;
+
         
         private Vector3 _upAxis;
         private Vector3 _rightAxis;
@@ -64,6 +68,7 @@ namespace Catlike
         private Rigidbody _previousConnectedBody;
         private float _submergence;
 
+        public bool Swimming => _submergence >= _swimThreshold;
         private bool OnGround => _groundContactCount > 0;
         private bool OnSteep => _steepContactCount > 0;
         private bool InWater => _submergence > 0f;
@@ -117,7 +122,7 @@ namespace Catlike
 
         private void UpdateColor()
         {
-            _renderer.material = Climbing ? _climbingMaterial : _normalMaterial;
+            _renderer.material = Climbing ? _climbingMaterial : Swimming ? _swimmingMaterial : _normalMaterial;
         }
 
         private void FixedUpdate()
@@ -168,7 +173,7 @@ namespace Catlike
             _stepsSinceLastGrounded++;
             _stepsSinceLastJump++;
             _velocity = _rigidbody.velocity;
-            if (CheckClimbing() ||  OnGround || SnapToGround() || CheckSteepContacts())
+            if (CheckClimbing() || CheckSwimming() || OnGround || SnapToGround() || CheckSteepContacts())
             {
                 _stepsSinceLastGrounded = 0;
                 // Checking false landing.
@@ -210,7 +215,7 @@ namespace Catlike
         private bool SnapToGround()
         {
             var speed = _velocity.magnitude;
-            if (_stepsSinceLastGrounded > 1 || _stepsSinceLastJump <= 2 || InWater)
+            if (_stepsSinceLastGrounded > 1 || _stepsSinceLastJump <= 2)
             {
                 return false;
             }
@@ -378,6 +383,15 @@ namespace Catlike
                 // Use up axis for z when climbing
                 zAxis = _upAxis;
             }
+            else if (InWater)
+            {
+                var swimFactor = Mathf.Min(1f, _submergence / _swimThreshold);
+                var nonSwimmingAcceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
+                acceleration = Mathf.LerpUnclamped(nonSwimmingAcceleration, _maxSwimAcceleration, swimFactor);
+                speed = Mathf.LerpUnclamped(_maxSpeed, _maxSwimSpeed, swimFactor);
+                xAxis = _rightAxis;
+                zAxis = _forwardAxis;
+            }
             else
             {
                 acceleration = OnGround ? _maxAcceleration : _maxAirAcceleration;
@@ -489,6 +503,17 @@ namespace Catlike
             {
                 _submergence = 1f;
             }
+        }
+
+        private bool CheckSwimming()
+        {
+            if (Swimming)
+            {
+                _groundContactCount = 0;
+                _contactNormal = _upAxis;
+                return true;
+            }
+            return false;
         }
     }
 }
