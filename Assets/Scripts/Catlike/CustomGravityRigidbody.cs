@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Catlike
@@ -7,6 +6,13 @@ namespace Catlike
     public class CustomGravityRigidbody : MonoBehaviour
     {
         [SerializeField] private bool _floatToSleep;
+        [SerializeField] private float _submergenceOffset = 0.5f;
+        [SerializeField, Min(0.1f)] private float _submergenceRange = 1f;
+        [Tooltip("With zero buoyancy sinks like a rock, an object with a buoyancy of 1 is in equilibrium, buoyancy greater than 1 floats to the surface.")]
+        [SerializeField, Min(0)] private float _buoyancy = 1f;
+        [SerializeField, Range(0f, 10f)] private float _waterDrag = 1f;
+        [SerializeField] private LayerMask _waterMask = 0;
+
         private Rigidbody _rigidbody;
         private float _floatDelay;
 

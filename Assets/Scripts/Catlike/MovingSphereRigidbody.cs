@@ -32,6 +32,7 @@ namespace Catlike
         [SerializeField] private Material _normalMaterial;
         [SerializeField] private Material _climbingMaterial;
         [SerializeField] private Material _swimmingMaterial;
+        [Tooltip("Minimal submergence required for swimming.")]
         [SerializeField, Range(0.01f, 1f)] private float _swimThreshold = 0.5f;
         [SerializeField, Range(0f, 100f)] private float _maxSwimSpeed = 5f;
         [SerializeField, Range(0f, 100f)] private float _maxSwimAcceleration = 5f;
@@ -40,7 +41,7 @@ namespace Catlike
         private Vector3 _upAxis;
         private Vector3 _rightAxis;
         private Vector3 _forwardAxis;
-        private Vector2 _playerInput;
+        private Vector3 _playerInput;
         
         private Vector3 _velocity;
         private Vector3 _connectionVelocity;
@@ -109,14 +110,22 @@ namespace Catlike
             UpdateColor();
         }
         
-        private Vector2 ReadInput()
+        private Vector3 ReadInput()
         {
-            var playerInput = Vector2.zero;
+            var playerInput = Vector3.zero;
             playerInput.x = Input.GetAxis("Horizontal");
             playerInput.y = Input.GetAxis("Vertical");
-            playerInput = Vector2.ClampMagnitude(playerInput, 1f);
-            _desiredJump |= Input.GetButtonDown("Jump");
-            _desiresClimbing = Input.GetButton("Climb");
+            playerInput.z = Swimming ? Input.GetAxis("UpDown") : 0f;
+            playerInput = Vector3.ClampMagnitude(playerInput, 1f);
+            if (Swimming) 
+            {
+                _desiresClimbing = false;
+            }
+            else
+            {
+                _desiredJump |= Input.GetButtonDown("Jump");
+                _desiresClimbing = Input.GetButton("Climb");
+            }
             return playerInput;
         }
 
@@ -293,6 +302,10 @@ namespace Catlike
             _stepsSinceLastJump = 0;
             _activeJumpCount++;
             var jumpSpeed = CalculateGravitationalEscapeSpeed(_jumpHeight, gravity);
+            if (InWater)
+            {
+                jumpSpeed *= Mathf.Max(0f, 1f - _submergence / _swimThreshold);
+            }
             var alignedSpeed = Vector3.Dot(_velocity, jumpDirection);
             if (alignedSpeed > 0.0f)
             {
@@ -318,6 +331,10 @@ namespace Catlike
 
         private void EvaluateCollision(Collision collision)
         {
+            if (Swimming)
+            {
+                return;
+            }
             var layer = collision.gameObject.layer;
             var minDot = GetMinDot(layer);
             for (var i = 0; i < collision.contactCount; i++) 
@@ -421,6 +438,12 @@ namespace Catlike
             var deltaZ = newZ - currentZ;
 
             _offset = xAxis * deltaX + zAxis * deltaZ;
+            if (Swimming)
+            {
+                var currentY = Vector3.Dot(relativeVelocity, _upAxis);
+                var newY = Mathf.MoveTowards(currentY, _playerInput.z * speed, maxSpeedChange);
+                _offset += _upAxis * (newY - currentY);
+            }
             // Add to current velocity in the appropriate dimensions.
             _velocity += _offset;
         }
@@ -478,7 +501,7 @@ namespace Catlike
         {
             if (MaskIsSet(_waterMask, other.gameObject.layer))
             {
-                EvaluateSubmergence();
+                EvaluateSubmergence(other);
             }
         }
 
@@ -486,11 +509,11 @@ namespace Catlike
         {
             if (MaskIsSet(_waterMask, other.gameObject.layer))
             {
-                EvaluateSubmergence();
+                EvaluateSubmergence(other);
             }
         }
 
-        private void EvaluateSubmergence()
+        private void EvaluateSubmergence(Collider otherCollider)
         {
             var origin = _rigidbody.position + _upAxis * _submergenceOffset;
             // This is needed to counter invalid value when moving out of the water.
@@ -502,6 +525,11 @@ namespace Catlike
             else
             {
                 _submergence = 1f;
+            }
+            // Supporting water volumes that move.
+            if (Swimming)
+            {
+                _connectedBody = otherCollider.attachedRigidbody;
             }
         }
 
