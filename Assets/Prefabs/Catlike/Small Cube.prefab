@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5707915607088006839}
   - component: {fileID: 5707915607088006836}
   - component: {fileID: 5707915607088006832}
-  - component: {fileID: 7743495811001620637}
+  - component: {fileID: 4422737032332966723}
   m_Layer: 12
   m_Name: Small Cube
   m_TagString: Untagged
@@ -31,6 +31,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -54,10 +55,12 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -82,6 +85,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &5707915607088006836
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -111,7 +115,7 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &7743495811001620637
+--- !u!114 &4422737032332966723
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -120,15 +124,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 5707915607088006837}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 701601ff769a24fd39b82be85d0b4ecf, type: 3}
+  m_Script: {fileID: 11500000, guid: 5772183da2c74ceb874723e16ecc7b7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  floatToSleep: 1
-  submergenceOffset: 0.125
-  submergenceRange: 0.25
-  buoyancy: 1.1
-  buoyancyOffset: {x: 0, y: 0.01, z: 0}
-  waterDrag: 1
-  waterMask:
+  _floatToSleep: 0
+  _submergenceOffset: 0.5
+  _submergenceRange: 1
+  _buoyancy: 0.9
+  _waterDrag: 3.58
+  _waterMask:
     serializedVersion: 2
     m_Bits: 16

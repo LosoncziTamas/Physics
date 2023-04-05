@@ -1,4 +1,5 @@
 using UnityEngine;
+using static Catlike.Utility;
 
 namespace Catlike
 {
@@ -15,6 +16,8 @@ namespace Catlike
 
         private Rigidbody _rigidbody;
         private float _floatDelay;
+        private float _submergence;
+        private Vector3 _gravity;
 
         private void Awake()
         {
@@ -44,7 +47,53 @@ namespace Catlike
                     _floatDelay = 0.0f;
                 }
             }
-            _rigidbody.AddForce(CustomGravity.GetGravity(_rigidbody.position), ForceMode.Acceleration);
+            _gravity = CustomGravity.GetGravity(_rigidbody.position);
+            if (_submergence > 0)
+            {
+                var drag = Mathf.Max(0f, 1f - _waterDrag * _submergence * Time.deltaTime);
+                _rigidbody.velocity *= drag;
+                _rigidbody.angularVelocity *= drag;
+                _rigidbody.AddForce(_gravity * - (_buoyancy * _submergence), ForceMode.Acceleration);
+                _submergence = 0;
+            }
+            _rigidbody.AddForce(_gravity, ForceMode.Acceleration);
+        }
+        
+        private void OnTriggerEnter(Collider other)
+        {
+            if (MaskIsSet(_waterMask, other.gameObject.layer))
+            {
+                EvaluateSubmergence();
+            }
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (_rigidbody.IsSleeping())
+            {
+                // Skip evaluating submergence if body is sleeping.
+                return;
+            }
+            if (MaskIsSet(_waterMask, other.gameObject.layer))
+            {
+                EvaluateSubmergence();
+            }
+        }
+
+        private void EvaluateSubmergence()
+        {
+            var upAxis = -_gravity.normalized;
+            var origin = _rigidbody.position + upAxis * _submergenceOffset;
+            // This is needed to counter invalid value when moving out of the water.
+            var additionalRangeOffset = 1.0f;
+            if (Physics.Raycast(origin, upAxis, out var hit, _submergenceRange + additionalRangeOffset, _waterMask, QueryTriggerInteraction.Collide))
+            {
+                _submergence = 1 - hit.distance / _submergenceRange;
+            }
+            else
+            {
+                _submergence = 1f;
+            }
         }
     }
 }

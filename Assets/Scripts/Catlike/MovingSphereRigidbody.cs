@@ -1,5 +1,5 @@
-using System;
 using UnityEngine;
+using static Catlike.Utility;
 
 namespace Catlike
 {
@@ -470,11 +470,6 @@ namespace Catlike
             return MaskIsSet(_stairsMask, layerIndex) ? _minGroundDotProduct : _minStairsDotProduct;
         }
 
-        private static bool MaskIsSet(LayerMask layerMask, int layerIndex)
-        {
-            return (layerMask & (1 << layerIndex)) != 0;
-        }
-        
         private bool CheckClimbing()
         {
             if (!Climbing)
