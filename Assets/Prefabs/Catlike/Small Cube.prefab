@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5707915607088006836}
   - component: {fileID: 5707915607088006832}
   - component: {fileID: 4422737032332966723}
-  m_Layer: 12
+  m_Layer: 9
   m_Name: Small Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -130,8 +130,9 @@ MonoBehaviour:
   _floatToSleep: 0
   _submergenceOffset: 0.5
   _submergenceRange: 1
-  _buoyancy: 0.9
+  _buoyancy: 1.1
   _waterDrag: 3.58
   _waterMask:
     serializedVersion: 2
     m_Bits: 16
+  _buoyancyOffset: {x: 0, y: 0.01, z: 0}

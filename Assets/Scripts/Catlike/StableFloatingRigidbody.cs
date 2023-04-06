@@ -4,7 +4,7 @@ using static Catlike.Utility;
 namespace Catlike
 {
     [RequireComponent(typeof(Rigidbody))]
-    public class CustomGravityRigidbody : MonoBehaviour
+    public class StableFloatingRigidbody : MonoBehaviour
     {
         [SerializeField] private bool _floatToSleep;
         [SerializeField] private float _submergenceOffset = 0.5f;
@@ -13,17 +13,18 @@ namespace Catlike
         [SerializeField, Min(0)] private float _buoyancy = 1f;
         [SerializeField, Range(0f, 10f)] private float _waterDrag = 1f;
         [SerializeField] private LayerMask _waterMask = 0;
-        [SerializeField] private Vector3 _buoyancyOffset = Vector3.zero;
+        [SerializeField] private Vector3[] _buoyancyOffsets = default;
 
         private Rigidbody _rigidbody;
         private float _floatDelay;
-        private float _submergence;
+        private float[] _submergence;
         private Vector3 _gravity;
 
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody>();
             _rigidbody.useGravity = false;
+            _submergence = new float[_buoyancyOffsets.Length];
         }
 
         private void FixedUpdate()
@@ -86,17 +87,22 @@ namespace Catlike
 
         private void EvaluateSubmergence()
         {
-            var upAxis = -_gravity.normalized;
-            var origin = _rigidbody.position + upAxis * _submergenceOffset;
+            var down = _gravity.normalized;
+            var offset = down * -_submergenceOffset;
             // This is needed to counter invalid value when moving out of the water.
             var additionalRangeOffset = 1.0f;
-            if (Physics.Raycast(origin, upAxis, out var hit, _submergenceRange + additionalRangeOffset, _waterMask, QueryTriggerInteraction.Collide))
+            for (var index = 0; index < _buoyancyOffsets.Length; index++)
             {
-                _submergence = 1 - hit.distance / _submergenceRange;
-            }
-            else
-            {
-                _submergence = 1f;
+                var buoyancyOffset = _buoyancyOffsets[index];
+                var origin = offset + transform.TransformPoint(buoyancyOffset);
+                if (Physics.Raycast(origin, down, out var hit, _submergenceRange + additionalRangeOffset, _waterMask, QueryTriggerInteraction.Collide))
+                {
+                    _submergence[index] = 1f - hit.distance / _submergenceRange;
+                }
+                else
+                {
+                    _submergence[index] = 1f;
+                }
             }
         }
     }
