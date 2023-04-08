@@ -38953,9 +38953,17 @@ PrefabInstance:
       value: 5.66
       objectReference: {fileID: 0}
     - target: {fileID: 197969860796230198, guid: 0379d4707a828415494f18f6eb7a15be, type: 3}
+      propertyPath: _maxSwimSpeed
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 197969860796230198, guid: 0379d4707a828415494f18f6eb7a15be, type: 3}
       propertyPath: _playerInputSpace
       value: 
       objectReference: {fileID: 963194228}
+    - target: {fileID: 197969860796230198, guid: 0379d4707a828415494f18f6eb7a15be, type: 3}
+      propertyPath: _maxSwimAcceleration
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 6315726874829106888, guid: 0379d4707a828415494f18f6eb7a15be, type: 3}
       propertyPath: m_RootOrder
       value: 2

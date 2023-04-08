@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using static Catlike.Utility;
 
@@ -110,6 +111,22 @@ namespace Catlike
                     // fully submerged
                     _submergence[index] = 1f;
                 }
+            }
+        }
+
+        private void OnDrawGizmos()
+        {
+            for (var index = 0; index < _buoyancyOffsets.Length; index++)
+            {
+                var submergence = 0f;
+                if (_submergence is { Length: > 0 })
+                {
+                    submergence = _submergence[index];
+                }
+                var buoyancyOffset = _buoyancyOffsets[index];
+                var origin = buoyancyOffset + transform.TransformPoint(buoyancyOffset);
+                Gizmos.color = Color.Lerp(Color.white, Color.blue, submergence);
+                Gizmos.DrawSphere(origin, 0.15f * submergence);
             }
         }
     }
