@@ -14,6 +14,7 @@ namespace Catlike
         [SerializeField, Range(0f, 10f)] private float _waterDrag = 1f;
         [SerializeField] private LayerMask _waterMask = 0;
         [SerializeField] private Vector3[] _buoyancyOffsets = default;
+        [SerializeField] private bool _safeFloating = false;
 
         private Rigidbody _rigidbody;
         private float _floatDelay;
@@ -50,16 +51,21 @@ namespace Catlike
                 }
             }
             _gravity = CustomGravity.GetGravity(_rigidbody.position);
-            if (_submergence > 0)
+            var dragFactor = _waterDrag * Time.deltaTime / _buoyancyOffsets.Length;
+            var buoyancyFactor = -_buoyancy / _buoyancyOffsets.Length;
+            for (var i = 0; i < _buoyancyOffsets.Length; i++)
             {
-                var drag = Mathf.Max(0f, 1f - _waterDrag * _submergence * Time.deltaTime);
-                _rigidbody.velocity *= drag;
-                _rigidbody.angularVelocity *= drag;
-                var buoyancy = _gravity * -(_buoyancy * _submergence);
-                var buoyancyCenter = transform.TransformPoint(_buoyancyOffset);
-                // Push offset point to the top. 
-                _rigidbody.AddForceAtPosition(buoyancy, buoyancyCenter,  ForceMode.Acceleration);
-                _submergence = 0;
+                if (_submergence[i] > 0)
+                {
+                    var drag = Mathf.Max(0f, 1f - dragFactor * _submergence[i]);
+                    _rigidbody.velocity *= drag;
+                    _rigidbody.angularVelocity *= drag;
+                    var buoyancy = _gravity * (buoyancyFactor * _submergence[i]);
+                    var buoyancyCenter = transform.TransformPoint(_buoyancyOffsets[i]);
+                    // Push offset point to the top. 
+                    _rigidbody.AddForceAtPosition(buoyancy, buoyancyCenter,  ForceMode.Acceleration);
+                    _submergence[i] = 0;
+                }
             }
             _rigidbody.AddForce(_gravity, ForceMode.Acceleration);
         }
@@ -99,8 +105,9 @@ namespace Catlike
                 {
                     _submergence[index] = 1f - hit.distance / _submergenceRange;
                 }
-                else
+                else if (!_safeFloating || Physics.CheckSphere(origin, 0.01f, _waterMask, QueryTriggerInteraction.Collide))
                 {
+                    // fully submerged
                     _submergence[index] = 1f;
                 }
             }
