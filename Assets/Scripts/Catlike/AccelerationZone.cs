@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Catlike
 {
@@ -17,15 +16,19 @@ namespace Catlike
             }
         }
 
-        private void Accelerate(Rigidbody rigidbody)
+        private void Accelerate(Rigidbody rb)
         {
-            var velocity = rigidbody.velocity;
+            var velocity = rb.velocity;
             if (velocity.y > _speed)
             {
                 return;
             }
             velocity.y = _speed;
-            rigidbody.velocity = velocity;
+            rb.velocity = velocity;
+            if (rb.TryGetComponent(out MovingSphereRigidbody sphere))
+            {
+                sphere.PreventSnapToGround();
+            }
         }
     }
 }

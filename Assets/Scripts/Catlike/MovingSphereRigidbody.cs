@@ -221,9 +221,14 @@ namespace Catlike
             _connectionLocalPosition = _connectedBody.transform.InverseTransformPoint(_connectionWorldPosition);
         }
 
+        /// <summary>
+        /// Keeps stuck to the ground if needed.
+        /// </summary>
+        /// <returns>True if grounded.</returns>
         private bool SnapToGround()
         {
             var speed = _velocity.magnitude;
+            // only gets invoked when we're not grounded, only try to snap once directly after we lost contact.
             if (_stepsSinceLastGrounded > 1 || _stepsSinceLastJump <= 2)
             {
                 return false;
@@ -232,7 +237,9 @@ namespace Catlike
             {
                 return false;
             }
-            if (!Physics.Raycast(_rigidbody.position, -_upAxis, out var hit, _probeDistance, _probeMask, QueryTriggerInteraction.Ignore))
+            // only want to snap when there's ground below the sphere to stick to
+            var isGroundBelow = Physics.Raycast(_rigidbody.position, -_upAxis, out var hit, _probeDistance, _probeMask, QueryTriggerInteraction.Ignore);
+            if (!isGroundBelow)
             {
                 return false;
             }
@@ -537,6 +544,11 @@ namespace Catlike
                 return true;
             }
             return false;
+        }
+
+        public void PreventSnapToGround()
+        {
+            _stepsSinceLastJump = -1;
         }
     }
 }
